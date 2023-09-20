@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include "../include/functions.h"
+#include "functions.h"
 #include <signal.h>
 
 
@@ -76,7 +76,7 @@ int main(int argc, char **argv)
             perror("dup2 error in child process");
             exit(1);
         }
-        execl("child", "child", fileName, NULL);
+        execl("./build/child_exe", "child_exe", fileName, NULL);
     }
 
     free(fileName);
