@@ -36,6 +36,7 @@ int main(int argc, char **argv)
     if (pid > 0) { // parent procces
         printf("CHILD PID = %d, PARENT_PID = %d\n", pid, getpid());
         close(pipe1[0]);
+        close(pipe2[1]);
         printf("Введите числа:\n");
 
         char *inputString;
@@ -54,10 +55,16 @@ int main(int argc, char **argv)
             exit(1);
         }
 
-        // Перенаправляем STDOUT на PIPE
+        // Перенаправляем STDOUT на PIPE1
         if (dup2(pipe1[1], STDOUT_FILENO) == -1) {
-            perror("dup2 error in parent process");
+            perror("dup2 stdout error in parent process");
             exit(1);    
+        }
+
+        // Перенаправляем STDIN на PIPE2
+        if (dup2(pipe2[0], STDIN_FILENO) == -1) {
+            perror("dup2 stdin error in parent process");
+            exit(1);
         }
 
         // Пишем в PIPE
@@ -72,8 +79,14 @@ int main(int argc, char **argv)
 
     if (pid == 0) { // child procces
         close(pipe1[1]);
+        close(pipe2[0]);
         if (dup2(pipe1[0], STDIN_FILENO) == -1) {
-            perror("dup2 error in child process");
+            perror("dup2 stdin error in child process");
+            exit(1);
+        }
+
+        if (dup2(pipe2[1], STDOUT_FILENO) == -1) {
+            perror("dup2 stdout error in child process");
             exit(1);
         }
         execl("./build/child_exe", "child_exe", fileName, NULL);
