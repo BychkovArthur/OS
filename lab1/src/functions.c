@@ -37,9 +37,13 @@ void fillArrayWithNumbers(char *stringOfNumbers, int stringLen, int* array) {
 double devide(int* array, int numberOfNumbers) {
     double result = array[0];
     for (int i = 1; i < numberOfNumbers; ++i) {
+        if (array[i] == 0) {
+            perror("divizion by zero");
+            exit(1);
+        }
         result /= array[i];
     }
-    // Проверка деления на нуль
+    
     return result;
 }
 
@@ -52,7 +56,7 @@ void fileNameValidation(char* fileName) {
             break;
         }
         ++i;
-    }   
+    }
     if (fileName[0] == '\0') {
         perror("Invalid fileName");
         exit(1);

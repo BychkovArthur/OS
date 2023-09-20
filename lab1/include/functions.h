@@ -7,4 +7,6 @@ void fillArrayWithNumbers(char *stringOfNumbers, int stringLen, int* array);
 
 double devide(int* array, int numberOfNumbers);
 
+void fileNameValidation(char* fileName);
+
 #endif //LAB1_FUNCTIONS_H
