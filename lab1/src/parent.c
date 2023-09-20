@@ -14,7 +14,7 @@ int main(int argc, char **argv)
     char* fileName = (char *) malloc(fileNameLen * sizeof(char));
     printf("Введите название файла:\n");
     if (getline(&fileName, &fileNameLen, stdin) == -1) {
-        perror("FileName read error");
+        perror("FileName read error (parent)");
         exit(1);
     }
 
@@ -34,7 +34,9 @@ int main(int argc, char **argv)
     }
 
     if (pid > 0) { // parent procces
-        printf("CHILD PID = %d, PARENT_PID = %d\n", pid, getpid());
+
+        printf("\nCHILD_PID = %d, PARENT_PID = %d\n\n", pid, getpid()); //DEBUG_INFO
+
         close(pipe1[0]);
         close(pipe2[1]);
         printf("Введите числа:\n");
@@ -45,48 +47,61 @@ int main(int argc, char **argv)
         inputString = (char *) malloc(n * sizeof(char));
 
         if (inputString == NULL) {
-            perror("Unable allocate buffer");
+            perror("Unable allocate buffer (parent)");
             exit(1);
         }
 
         if ((charactersReaded = getline(&inputString, &n, stdin)) == -1) { // Считывается перенос тоже
-            perror("Read error from parent process");
+            perror("Read error from (parent)");
             kill(pid, SIGKILL); // Если ничего не прочитали в родительском, убиваем дочерний
             exit(1);
         }
 
         // Перенаправляем STDOUT на PIPE1
         if (dup2(pipe1[1], STDOUT_FILENO) == -1) {
-            perror("dup2 stdout error in parent process");
+            perror("dup2 stdout error (parent)");
             exit(1);    
         }
 
         // Перенаправляем STDIN на PIPE2
         if (dup2(pipe2[0], STDIN_FILENO) == -1) {
-            perror("dup2 stdin error in parent process");
+            perror("dup2 stdin error (parent)");
             exit(1);
         }
 
         // Пишем в PIPE
         if (write(pipe1[1], &charactersReaded, sizeof(ssize_t)) == -1 || write(pipe1[1], inputString, charactersReaded) == -1) {
-            perror("Write error from parent process");
+            perror("Write error (parent)");
             exit(1);
         }
 
         waitpid(pid, NULL, 0);
         free(inputString);
+
+        // Проверка статуса дочернего процесса
+        int childProcessExitStatus;
+        if (read(STDIN_FILENO, &childProcessExitStatus, sizeof(int)) == -1) {
+            perror("Can't read data from child (parent)");
+            exit(1);
+        }
+        if (childProcessExitStatus) {
+            perror("Child process error (parent)");
+            exit(1);
+        }
+        close(pipe1[1]);
+        close(pipe2[0]);
     }
 
     if (pid == 0) { // child procces
         close(pipe1[1]);
         close(pipe2[0]);
         if (dup2(pipe1[0], STDIN_FILENO) == -1) {
-            perror("dup2 stdin error in child process");
+            perror("dup2 stdin error (child)");
             exit(1);
         }
 
         if (dup2(pipe2[1], STDOUT_FILENO) == -1) {
-            perror("dup2 stdout error in child process");
+            perror("dup2 stdout error (child)");
             exit(1);
         }
         execl("./build/child_exe", "child_exe", fileName, NULL);

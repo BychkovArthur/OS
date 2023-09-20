@@ -1,6 +1,7 @@
 #include "functions.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 int getNumberOfNumbers(char* stringOfNumbers, int stringLen) {
     if (stringLen == 0 || (stringLen == 1 && stringOfNumbers[0] == '\n')) {
@@ -34,11 +35,13 @@ void fillArrayWithNumbers(char *stringOfNumbers, int stringLen, int* array) {
     }
 }
 
-double devide(int* array, int numberOfNumbers) {
+double devide(int* array, int numberOfNumbers, int* childProcessExitStatus) {
     double result = array[0];
     for (int i = 1; i < numberOfNumbers; ++i) {
         if (array[i] == 0) {
-            perror("divizion by zero");
+            perror("Divizion by zero (child)");
+            *childProcessExitStatus = 1;
+            write(STDOUT_FILENO, childProcessExitStatus, sizeof(int));
             exit(1);
         }
         result /= array[i];
@@ -58,7 +61,7 @@ void fileNameValidation(char* fileName) {
         ++i;
     }
     if (fileName[0] == '\0') {
-        perror("Invalid fileName");
+        perror("Invalid fileName (parent)");
         exit(1);
     }
 }
