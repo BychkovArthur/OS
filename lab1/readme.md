@@ -1,6 +1,6 @@
 ## lab1
 
-### build/rebuild:
+### build / rebuild:
 *make build*
 
 ### run:
