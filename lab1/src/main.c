@@ -1,19 +1,31 @@
 #include "stdlib.h"
 #include <unistd.h>
 #include <stdio.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include "../include/functions.h"
 
 
 int main(int argc, char **argv)
 {
-    // pid_t pid = fork();
-    pid_t pid = 0;
+    int pipe1[2];
+    int pipe2[2];
+    if (pipe(pipe1) == -1 || pipe(pipe2) == -1) {
+        perror("pipe");
+        exit(1);
+    }
+
+    pid_t pid = fork();
+    // pid_t pid = 0;
 
     if (pid == -1) {
         perror("fork");
         exit(1);
     }
-    if (pid == 0) { // parent procces
+
+    if (pid > 0) { // parent procces
+        close(pipe1[0]);
+        printf("CHILD PID = %d, PARENT_PID = %d\n", pid, getpid());
         printf("Введите числа:\n");
 
         char *input;
@@ -26,30 +38,29 @@ int main(int argc, char **argv)
             exit(1);
         }
 
-        if ((readed = getline(&input, &n, stdin)) != -1) { // Считывается перенос тоже
-            printf("Readed %ld symbols\n", readed);
-            printf("Input string: %s\n", input);
-            printf("n equal: %ld\n", n);
-            int numberOfNumbers = getNumberOfNumbers(input, readed);
-            printf("Количество чисел: %d\n", numberOfNumbers);
-            if (numberOfNumbers > 0) {
-                int *arrayOfNumbers = malloc(sizeof(int) * numberOfNumbers);
-                fillArrayWithNumbers(input, readed, arrayOfNumbers);
-                for (int i = 0; i < numberOfNumbers; ++i) {
-                    printf("HERE %d\n", arrayOfNumbers[i]);
-                }
-                printf("%lf", devide(arrayOfNumbers, numberOfNumbers));
-                free(arrayOfNumbers);
-            } else {
-                printf("Вы не ввели числа!\n");
-            }
-
+        if ((readed = getline(&input, &n, stdin)) == -1) { // Считывается перенос тоже
+            perror("Read error from parent process");
+            exit(1);
         }
 
-        
-        free(input);
+        // Перенаправляем STDOUT на PIPE
+        if (dup2(pipe1[1], STDOUT_FILENO) == -1) {
+            perror("PIZDEC");
+            exit(1);    
+        }
+
+        // Пишем в PIPE
+        if (write(pipe1[1], &readed, sizeof(ssize_t)) == -1 || write(pipe1[1], input, readed) == -1) {
+            perror("Write error from parent process");
+            exit(1);
+        }
+
+        // wait(NULL);
+        // free(input);
     }
-    if (pid > 0) { // child procces
+    if (pid == 0) { // child procces
+        close(pipe1[1]);
+        dup2(pipe1[0], STDIN_FILENO);
         execl("child", "child", NULL);
     }
 }
