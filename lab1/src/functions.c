@@ -1,4 +1,6 @@
 #include "../include/functions.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 int getNumberOfNumbers(char* stringOfNumbers, int stringLen) {
     if (stringLen == 0 || (stringLen == 1 && stringOfNumbers[0] == '\n')) {
@@ -36,6 +38,23 @@ double devide(int* array, int numberOfNumbers) {
     double result = array[0];
     for (int i = 1; i < numberOfNumbers; ++i) {
         result /= array[i];
-    }  
+    }
+    // Проверка деления на нуль
     return result;
+}
+
+void fileNameValidation(char* fileName) {
+    int i = 0;
+    // Удаление переноса строки
+    while (fileName[i] != '\0') {
+        if (fileName[i] == '\n') {
+            fileName[i] = '\0';
+            break;
+        }
+        ++i;
+    }   
+    if (fileName[0] == '\0') {
+        perror("Invalid fileName");
+        exit(1);
+    }
 }
