@@ -9,6 +9,7 @@
 
 int main(int argc, char **argv)
 {
+    
     int childProcessExitStatus = 0;
     // Читаю количество символов (байт)
     ssize_t stringLen;

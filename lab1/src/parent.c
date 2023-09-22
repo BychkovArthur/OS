@@ -6,6 +6,8 @@
 #include "functions.h"
 #include <signal.h>
 
+// TODO:
+// -  Передавать не строки, а числа
 
 int main(int argc, char **argv)
 {
@@ -34,8 +36,6 @@ int main(int argc, char **argv)
     }
 
     if (pid > 0) { // parent procces
-
-        printf("\nCHILD_PID = %d, PARENT_PID = %d\n\n", pid, getpid()); //DEBUG_INFO
 
         close(pipe1[0]);
         close(pipe2[1]);
@@ -104,7 +104,7 @@ int main(int argc, char **argv)
             perror("dup2 stdout error (child)");
             exit(1);
         }
-        execl("./build/child_exe", "child_exe", fileName, NULL);
+        execl("./build/child_exe", "./build/child_exe", fileName, NULL);
     }
 
     free(fileName);
