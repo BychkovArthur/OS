@@ -103,10 +103,10 @@ int main(int argc, char **argv)
             exit(1);
         }
 
-        // if (dup2(pipe2[1], STDOUT_FILENO) == -1) {
-        //     perror("dup2 stdout error (child)");
-        //     exit(1);
-        // }
+        if (dup2(pipe2[1], STDOUT_FILENO) == -1) {
+            perror("dup2 stdout error (child)");
+            exit(1);
+        }
         execl("./build/child_exe", "./build/child_exe", fileName, NULL);
     }
 

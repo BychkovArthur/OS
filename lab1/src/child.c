@@ -9,12 +9,11 @@
 
 int main(int argc, char **argv)
 {
-    printf("here\n");
-    sleep(10000);
+
     int childProcessExitStatus = 0;
     // Читаю количество символов (байт)
     ssize_t stringLen;
-    if (read(STDIN_FILENO, &stringLen, sizeof(ssize_t)) == -1) { // TODO == sizeof(ssize_T)
+    if (read(STDIN_FILENO, &stringLen, sizeof(ssize_t)) != sizeof(ssize_t)) {
         perror("Can't read stringLen (child)");
         childProcessExitStatus = 1;
         write(STDOUT_FILENO, &childProcessExitStatus, sizeof(int));
@@ -24,7 +23,7 @@ int main(int argc, char **argv)
     // Чтение строки из PIPE
     char *inputString = (char *) malloc(stringLen * sizeof(char));
     ssize_t charactersReaded;
-    if ((charactersReaded = read(STDIN_FILENO, inputString, stringLen)) == -1) {
+    if ((charactersReaded = read(STDIN_FILENO, inputString, stringLen)) != stringLen) {
         perror("Can't read inputString (child)");
         childProcessExitStatus = 1;
         write(STDOUT_FILENO, &childProcessExitStatus, sizeof(int));
