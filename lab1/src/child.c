@@ -9,11 +9,12 @@
 
 int main(int argc, char **argv)
 {
-    
+    printf("here\n");
+    sleep(10000);
     int childProcessExitStatus = 0;
     // Читаю количество символов (байт)
     ssize_t stringLen;
-    if (read(STDIN_FILENO, &stringLen, sizeof(ssize_t)) == -1) {
+    if (read(STDIN_FILENO, &stringLen, sizeof(ssize_t)) == -1) { // TODO == sizeof(ssize_T)
         perror("Can't read stringLen (child)");
         childProcessExitStatus = 1;
         write(STDOUT_FILENO, &childProcessExitStatus, sizeof(int));

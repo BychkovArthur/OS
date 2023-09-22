@@ -8,12 +8,15 @@
 
 // TODO:
 // -  Передавать не строки, а числа
+// - Константу для размера файла PATH_MAX
+// - Проверки
+// - Много команд
 
 int main(int argc, char **argv)
 {
     // Чтение имени файла
     size_t fileNameLen = 128;
-    char* fileName = (char *) malloc(fileNameLen * sizeof(char));
+    char* fileName = (char  *) malloc(fileNameLen * sizeof(char));
     printf("Введите название файла:\n");
     if (getline(&fileName, &fileNameLen, stdin) == -1) {
         perror("FileName read error (parent)");
@@ -36,7 +39,7 @@ int main(int argc, char **argv)
     }
 
     if (pid > 0) { // parent procces
-
+        printf("child %d\n", pid);
         close(pipe1[0]);
         close(pipe2[1]);
         printf("Введите числа:\n");
@@ -100,10 +103,10 @@ int main(int argc, char **argv)
             exit(1);
         }
 
-        if (dup2(pipe2[1], STDOUT_FILENO) == -1) {
-            perror("dup2 stdout error (child)");
-            exit(1);
-        }
+        // if (dup2(pipe2[1], STDOUT_FILENO) == -1) {
+        //     perror("dup2 stdout error (child)");
+        //     exit(1);
+        // }
         execl("./build/child_exe", "./build/child_exe", fileName, NULL);
     }
 
