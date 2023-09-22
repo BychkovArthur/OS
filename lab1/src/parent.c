@@ -57,6 +57,17 @@ int main(int argc, char **argv)
             exit(1);
         }
 
+        // Получение количества чисел
+        int numberOfNumbers = getNumberOfNumbers(inputString, charactersReaded);
+        if (numberOfNumbers <= 0) {
+            perror("Invalid inputString (parent)");
+            exit(1);
+        }
+
+        int *arrayOfNumbers = malloc(sizeof(int) * numberOfNumbers);
+        fillArrayWithNumbers(inputString, charactersReaded, arrayOfNumbers);
+
+
         // Перенаправляем STDOUT на PIPE1
         if (dup2(pipe1[1], STDOUT_FILENO) == -1) {
             perror("dup2 stdout error (parent)");
@@ -70,7 +81,13 @@ int main(int argc, char **argv)
         }
 
         // Пишем в PIPE
-        if (write(pipe1[1], &charactersReaded, sizeof(ssize_t)) == -1 || write(pipe1[1], inputString, charactersReaded) == -1) {
+        if (write(pipe1[1], &numberOfNumbers, sizeof(int)) == -1 || write(pipe1[1], inputString, charactersReaded) == -1) {
+            perror("Write error (parent)");
+            exit(1);
+        }
+
+        // Пишем массив
+        if (write(pipe1[1], &arrayOfNumbers, sizeof(int)) == -1 || write(pipe1[1], inputString, charactersReaded) == -1) {
             perror("Write error (parent)");
             exit(1);
         }
