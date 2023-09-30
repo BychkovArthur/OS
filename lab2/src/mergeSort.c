@@ -1,0 +1,63 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include "../include/mergeSort.h"
+
+// Спросить, это колхоз или как?
+
+int* mergeSortAlgorithm(int* array, int* buffer, unsigned int size, int stepFromStart, int param) 
+{
+    if (size == 1) {
+        return param ? array : buffer;
+    }
+    int* res1 = mergeSortAlgorithm(&array[0], &buffer[0], size / 2, stepFromStart, (param + 1) % 2);
+    int* res2 = mergeSortAlgorithm(&array[size / 2], &buffer[size / 2], size - (size / 2), stepFromStart + (size / 2), (param + 1) % 2);
+
+    int* result;
+    if (param) {
+        result = merge(res1, res2, &array[0], size / 2, size - (size / 2));
+    } else {
+
+        result = merge(res1, res2, &buffer[0], size / 2, size - (size / 2));
+    }
+    return result;
+}
+
+int* merge(int* array1, int* array2, int* buffer, const unsigned int size1, const unsigned int size2)
+{
+    unsigned int ptr1 = 0;
+    unsigned int ptr2 = 0;
+
+    while (1) {
+        if (ptr1 < size1 && ( (ptr2 < size2 && array1[ptr1] <= array2[ptr2]) || (ptr2 == size2))) {
+            buffer[ptr1 + ptr2] = array1[ptr1];
+            ++ptr1;
+        } else if (ptr2 < size2 && ( (ptr1 < size1 && array2[ptr2] <= array1[ptr1]) || (ptr1 == size1))) {
+            buffer[ptr1 + ptr2] = array2[ptr2];
+            ++ptr2;
+        } else {
+            break;
+        }
+    }
+    return buffer;
+}
+
+int* mergeSort(int* array, int* buffer, int size) {
+    for (int i = 0; i < size; ++i) {buffer[i] = array[i];}
+    mergeSortAlgorithm(array, buffer, size, 0, 0);
+}
+
+int main() {
+    int array[7] = {18, 7, 2, 1, 3, 8, 54};
+    int buffer[7];
+    // Может быть такое, что я спущусь на уровень, где buffer и size = 1
+
+    mergeSort(array, buffer, 7);
+    for (int i = 0; i < 7; ++i) {
+        printf("%d ", array[i]);
+    }
+    printf("\n");
+    for (int i = 0; i < 7; ++i) {
+        printf("%d ", buffer[i]);
+    }
+    printf("\n");
+}
