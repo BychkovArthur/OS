@@ -4,13 +4,13 @@
 
 // Спросить, это колхоз или как?
 
-int* mergeSortAlgorithm(int* array, int* buffer, unsigned int size, int stepFromStart, int isLevelNumberEven) 
+int* mergeSortAlgorithm(int* array, int* buffer, unsigned int size, int isLevelNumberEven) 
 {
     if (size == 1) {
         return isLevelNumberEven ? array : buffer;
     }
-    int* res1 = mergeSortAlgorithm(&array[0], &buffer[0], size / 2, stepFromStart, (isLevelNumberEven + 1) % 2);
-    int* res2 = mergeSortAlgorithm(&array[size / 2], &buffer[size / 2], size - (size / 2), stepFromStart + (size / 2), (isLevelNumberEven + 1) % 2);
+    int* res1 = mergeSortAlgorithm(&array[0], &buffer[0], size / 2, (isLevelNumberEven + 1) % 2);
+    int* res2 = mergeSortAlgorithm(&array[size / 2], &buffer[size / 2], size - (size / 2), (isLevelNumberEven + 1) % 2);
 
     int* result;
     if (isLevelNumberEven) {
@@ -42,10 +42,12 @@ int* merge(int* array1, int* array2, int* buffer, const unsigned int size1, cons
 }
 
 int* mergeSort(int* array, int size) {
-    int buffer[size];
-    for (int i = 0; i < size; ++i) {buffer[i] = array[i];} // Нужно заполнять, т.к. на любом уровне (в т.ч. где 1 элемент) может быть как buff, так и arr, даже для одного массива (например, если длина 7)
-    // В этом случае, может возникнуть конфликт того, что я буду в merge писать или из buff в buff или из arr в arr
-    mergeSortAlgorithm(array, buffer, size, 0, 1);
+    if (size) {
+        int buffer[size];
+        for (int i = 0; i < size; ++i) {buffer[i] = array[i];} // Нужно заполнять, т.к. на любом уровне (в т.ч. где 1 элемент) может быть как buff, так и arr, даже для одного массива (например, если длина 7)
+        // В этом случае, может возникнуть конфликт того, что я буду в merge писать или из buff в buff или из arr в arr
+        mergeSortAlgorithm(array, buffer, size, 1);
+    }
 }
 
 int correctSort(int* arr, int size) {
@@ -57,8 +59,7 @@ int correctSort(int* arr, int size) {
 
 int main() {
     for (int i = 0; i < 100000; ++i) {
-        int size = rand() % 20 + 1;
-        printf("%d\n", size);
+        int size = rand() % 20;
         int arr[size];
         for (int j = 0; j < size; ++j) {
             arr[j] = rand() % 100;

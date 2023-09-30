@@ -2,7 +2,7 @@
 #define MERGE_SORT_H
 
 int* merge(int*, int*, int*, const unsigned int, const unsigned int);
-int* mergeSortAlgorithm(int*, int*, unsigned int, int, int);
+int* mergeSortAlgorithm(int*, int*, unsigned int, int);
 int* mergeSort(int*, int);
 
 
