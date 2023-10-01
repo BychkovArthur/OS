@@ -100,46 +100,86 @@ int test = 0;
 
 void parallelMergeSortAlgorithm(int threadCount, int* arr, int size) {
     pthread_t threads[threadCount];
-    struct dataForThread data1, data2;
-    data1.arr = arr;
-    data1.size = size / 2;
-    data2.arr = arr + (size / 2);
-    data2.size = size - (size / 2);
-    
-    if (pthread_create(threads, NULL, &parallelMergeSort, &data1)) {
-        perror("Thread create error");
+    struct dataForThread data[threadCount];
+
+    // Первые n-1 поток имею одинаковый размер массива, а последний то, что осталось
+    for (int i = 0; i < threadCount - 1; ++i) {
+        data[i].arr = arr + i * (size / threadCount);
+        data[i].size = size / threadCount;
     }
-    if (pthread_create(threads + 1, NULL, &parallelMergeSort, &data2)) {
-        perror("Thread create error");
+    data[threadCount - 1].arr = arr + (threadCount - 1) * (size / threadCount);
+    data[threadCount - 1].size = size - (threadCount - 1) * (size / threadCount);
+
+    // Создание потоков
+    for (int i = 0; i < threadCount; ++i) {
+        if (pthread_create(&threads[i], NULL, &parallelMergeSort, &data[i])) {
+            perror("Thread create error");
+        }
     }
 
-
-    for (int i = 0; i < 2; ++i) {
+    // Ожидание завершения основным потоков созданных
+    for (int i = 0; i < threadCount; ++i) {
         if (pthread_join(threads[i], NULL)) {
             perror("Thread join error");
         }
     }
 
     int buffer[size];
-    merge(arr, arr + (size / 2), buffer, size / 2, size - (size / 2));
+    
 
+    if (threadCount == 1) {
 
+    // Везде просто прибавляю сдвиг, чтобы писать в нужное место массива
+    } else if (threadCount == 2) {
+        merge(data[0].arr, data[1].arr, buffer, data[0].size, data[1].size);
+
+    } else if (threadCount == 4) {
+        int* res1 = merge(data[0].arr, data[1].arr, buffer, data[0].size, data[1].size);
+        int* res2 = merge(data[2].arr, data[3].arr, buffer + data[0].size + data[1].size, data[2].size, data[3].size);
+        merge(res1, res2, arr, data[0].size + data[1].size, data[2].size + data[3].size);
+
+    } else if (threadCount == 6) {
+        int* res1 = merge(data[0].arr, data[1].arr, buffer, data[0].size, data[1].size);
+        int* res2 = merge(data[2].arr, data[3].arr, buffer + data[0].size + data[1].size, data[2].size, data[3].size);
+        int* res3 = merge(data[4].arr, data[5].arr, buffer + data[0].size + data[1].size + data[2].size + data[3].size, data[4].size, data[5].size);
+
+        int* res4 = merge(res1, res2, arr, data[0].size + data[1].size, data[2].size + data[3].size);
+        merge(res4, res3, buffer, data[0].size + data[1].size + data[2].size + data[3].size, data[4].size + data[5].size);
+
+    } else if (threadCount == 8) {
+        int* res1 = merge(data[0].arr, data[1].arr, buffer, data[0].size, data[1].size);
+        int* res2 = merge(data[2].arr, data[3].arr, buffer + data[0].size + data[1].size, data[2].size, data[3].size);
+        int* res3 = merge(data[4].arr, data[5].arr, buffer + data[0].size + data[1].size + data[2].size + data[3].size, data[4].size, data[5].size);
+        int* res4 = merge(data[6].arr, data[7].arr, buffer + data[0].size + data[1].size + data[2].size + data[3].size + data[4].size + data[5].size, data[6].size, data[7].size);
+
+        int* res5 = merge(res1, res2, arr, data[0].size + data[1].size, data[2].size + data[3].size);
+        int* res6 = merge(res3, res4, arr + data[0].size + data[1].size + data[2].size + data[3].size, data[4].size + data[5].size, data[6].size + data[7].size);
+
+        merge(res5, res6, buffer, data[0].size + data[1].size + data[2].size + data[3].size, data[4].size + data[5].size + data[6].size + data[7].size);
+    }
 
     // Проверка на правильность
-    if (correctSort(buffer, size)) {
+    int* result = threadCount == 4 ? arr : buffer;
+    if (correctSort(result, size)) {
         printf("Проверка №%d УСПЕХ\n", ++test);
     } else {
         printf("Проверка №%d ОШИБКА\n", ++test);
+        for (int j = 0; j < size; ++j) {
+            printf("%d ", result[j]);
+        }
+        printf("\n");
     }
-    for (int j = 0; j < size; ++j) {
-        printf("%d ", buffer[j]);
-    }
-    printf("\n");
 }
 
-// 18 секунд - 1 потока
-// 14 секунд - 2 поток
-#define SIZE 10
+// ryzen 2600x (6 ядер, 12 потоков)
+// 1 поток ------ массив на 1000000 сортируется 100 раз: 18 секунда
+// 2 потока ------ массив на 1000000 сортируется 100 раз: 14 секунда
+// 4 потока ------ массив на 1000000 сортируется 100 раз: 10 секунда
+// 6 потоков ------ массив на 1000000 сортируется 100 раз: 8 секунда
+// 8 потоков ------ массив на 1000000 сортируется 100 раз: 9 секунда
+
+#define SIZE 1000000
+#define MAX_NUMBER 2000000
 int main(int argc, char* argv[]) {
     time_t start = time(NULL);
     
@@ -149,11 +189,11 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < 100; ++i) {
 
         for (int i = 0; i < SIZE; ++i) {
-            arr[i] = rand() % 20;
+            arr[i] = rand() % MAX_NUMBER;
         }
 
         if (argc == 2) {
-            parallelMergeSortAlgorithm(2, arr, SIZE);
+            parallelMergeSortAlgorithm(6, arr, SIZE);
         } else {
             mergeSort(arr, SIZE);
             if (correctSort(arr, SIZE)) {
