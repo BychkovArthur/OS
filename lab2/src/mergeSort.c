@@ -9,10 +9,6 @@ int* merge(int* array1, int* array2, int* buffer, const unsigned int size1, cons
     unsigned int ptr2 = 0;
 
     while (1) {
-        // printf("Before: ptr1 = %d, ptr2 = %d\n", ptr1, ptr2);
-        // printf("size1 = %d, size2 = %d\n", size1, size2);
-        // printf("arr1[ptr1] = %d, arr2[ptr2] = %d\n", array1[ptr1], array2[ptr2]);
-        // printf("buffer[ptr1 + ptr2] = %d\n", buffer[ptr1 + ptr2]);
         if (ptr1 < size1 && ( (ptr2 < size2 && array1[ptr1] <= array2[ptr2]) || (ptr2 == size2))) {
             buffer[ptr1 + ptr2] = array1[ptr1];
             ++ptr1;
@@ -22,11 +18,6 @@ int* merge(int* array1, int* array2, int* buffer, const unsigned int size1, cons
         } else {
             break;
         }
-        // printf("After: ptr1 = %d, ptr2 = %d\n", ptr1, ptr2);
-        // printf("size1 = %d, size2 = %d\n", size1, size2);
-        // printf("arr1[ptr1] = %d, arr2[ptr2] = %d\n", array1[ptr1], array2[ptr2]);
-        // printf("buffer[ptr1 + ptr2] = %d\n", buffer[ptr1 + ptr2]);
-        // printf("\n\n\n");
     }
     return buffer;
 }

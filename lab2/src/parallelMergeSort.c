@@ -20,13 +20,6 @@ void* parallelMergeSortAlgorithm(void* dataForThread) {
     // отсортированный массив был в array
     int locationOfSortedArray = threadCount == 4 ? ARRAY : BUFFER;
     mergeSortAlgorithm(array, buffer, size, locationOfSortedArray);
-
-    // for (int i = 0; i < size; ++i) {
-    //     printf("buffer[i] = %d (th %ld)\n", buffer[i], pthread_self());
-    // }
-    // for (int i = 0; i < size; ++i) {
-    //     printf("arr[i] = %d (th %ld)\n", array[i], pthread_self());
-    // }
 }
 
 void parallelMergeSort(int threadCount, int* arr, int size) {
@@ -70,18 +63,6 @@ void parallelMergeSort(int threadCount, int* arr, int size) {
 
     // Везде просто прибавляю сдвиг, чтобы писать в нужное место массива
     // Здесь последним (просто merge без записи) должен быть arr, чтобы именно в исходном массиве оказался полностью отсортированный массив
-    // printf("HERE: %ld, %ld, %ld, %ld\n", data[0].arr, arr, data[1].arr, data + data[0].size);
-
-
-    // for (int i = 0; i < size; ++i) {
-    //     printf("1: buffer[i] = %d (th %ld)\n", buffer[i], pthread_self());
-    // }
-    // for (int i = 0; i < size; ++i) {
-    //     printf("1: arr[i] = %d (th %ld)\n", arr[i], pthread_self());
-    // }
-
-
-
     if (threadCount == 2) {
         // В buff лежит отсортированный массив для каждого потока
         merge(data[0].buff, data[1].buff, arr, data[0].size, data[1].size);
