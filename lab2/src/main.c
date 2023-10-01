@@ -5,40 +5,52 @@
 #include "../include/parallelMergeSort.h"
 #include "../include/functions.h"
 
-#define SIZE 10
-#define MAX_NUMBER 20
+#define SIZE 1000000
+#define MAX_NUMBER 1000000
 
 // Выделить проге больше памяти
 
-// Указывать через параметр бинарника количество потоков
 int main(int argc, char* argv[]) {
-    time_t start = time(NULL);
+    int arraySize, forLoopTimes, threadCount;
+    if (argc != 4) {
+        usage();
+        return 1;
+    } else {
+        arraySize = strToInt(argv[1]);
+        forLoopTimes = strToInt(argv[2]);
+        threadCount = strToInt(argv[3]);
+    }
     
-    int arr[SIZE];
+    // int arr[arraySize];
+    int* arr = malloc(sizeof(int) * arraySize);
 
-    for (int i = 0; i < 1; ++i) {
+    time_t start = time(NULL);
 
-        for (int i = 0; i < SIZE; ++i) {
-            arr[i] = rand() % MAX_NUMBER;
-            printf("a[i] = %d\n", arr[i]);
+    for (int i = 0; i < forLoopTimes; ++i) {
+
+        for (int j = 0; j < arraySize; ++j) {
+            arr[j] = rand() % MAX_NUMBER;
+            // printf("a[i] = %d\n", arr[i]);
         }
 
-        if (argc == 2) {
-            parallelMergeSort(8, arr, SIZE);
+        if (threadCount != 1) {
+            parallelMergeSort(threadCount, arr, arraySize);
         } else {
-            mergeSort(arr, SIZE);
+            mergeSort(arr, arraySize);
         }
-            if (isArrayStrictlyIncreasing(arr, SIZE)) {
-                printf("Проверка №%d УСПЕХ\n", i + 1);
-            } else {
-                printf("Проверка №%d ОШИБКА\n", i + 1);
-            }
-                for (int j = 0; j < SIZE; ++j) {
-                    printf("%d ", arr[j]);
-                }
-                printf("\n");
+
+        if (isArrayStrictlyIncreasing(arr, arraySize)) {
+            printf("Проверка №%d УСПЕХ\n", i + 1);
+        } else {
+            printf("Проверка №%d ОШИБКА\n", i + 1);
+        }
+            // for (int j = 0; j < SIZE; ++j) {
+            //     printf("%d ", arr[j]);
+            // }
+            // printf("\n");
 
     }
     time_t end = time(NULL);
     printf("Seconds: %ld\n", end - start);
+    return 0;
 }
