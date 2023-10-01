@@ -1,6 +1,6 @@
 
 #include "../include/mergeSort.h"
-
+#include <stdio.h>
 // Спросить, это колхоз или как?
 
 int* merge(int* array1, int* array2, int* buffer, const unsigned int size1, const unsigned int size2)
@@ -9,6 +9,10 @@ int* merge(int* array1, int* array2, int* buffer, const unsigned int size1, cons
     unsigned int ptr2 = 0;
 
     while (1) {
+        // printf("Before: ptr1 = %d, ptr2 = %d\n", ptr1, ptr2);
+        // printf("size1 = %d, size2 = %d\n", size1, size2);
+        // printf("arr1[ptr1] = %d, arr2[ptr2] = %d\n", array1[ptr1], array2[ptr2]);
+        // printf("buffer[ptr1 + ptr2] = %d\n", buffer[ptr1 + ptr2]);
         if (ptr1 < size1 && ( (ptr2 < size2 && array1[ptr1] <= array2[ptr2]) || (ptr2 == size2))) {
             buffer[ptr1 + ptr2] = array1[ptr1];
             ++ptr1;
@@ -18,6 +22,11 @@ int* merge(int* array1, int* array2, int* buffer, const unsigned int size1, cons
         } else {
             break;
         }
+        // printf("After: ptr1 = %d, ptr2 = %d\n", ptr1, ptr2);
+        // printf("size1 = %d, size2 = %d\n", size1, size2);
+        // printf("arr1[ptr1] = %d, arr2[ptr2] = %d\n", array1[ptr1], array2[ptr2]);
+        // printf("buffer[ptr1 + ptr2] = %d\n", buffer[ptr1 + ptr2]);
+        // printf("\n\n\n");
     }
     return buffer;
 }
@@ -34,7 +43,6 @@ int* mergeSortAlgorithm(int* array, int* buffer, unsigned int size, int isLevelN
     if (isLevelNumberEven) {
         result = merge(res1, res2, &array[0], size / 2, size - (size / 2));
     } else {
-
         result = merge(res1, res2, &buffer[0], size / 2, size - (size / 2));
     }
     return result;

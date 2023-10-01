@@ -5,8 +5,10 @@
 #include "../include/parallelMergeSort.h"
 #include "../include/functions.h"
 
-#define SIZE 11
+#define SIZE 10
 #define MAX_NUMBER 20
+
+// Выделить проге больше памяти
 
 // Указывать через параметр бинарника количество потоков
 int main(int argc, char* argv[]) {
@@ -14,14 +16,15 @@ int main(int argc, char* argv[]) {
     
     int arr[SIZE];
 
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < 1; ++i) {
 
         for (int i = 0; i < SIZE; ++i) {
             arr[i] = rand() % MAX_NUMBER;
+            printf("a[i] = %d\n", arr[i]);
         }
 
         if (argc == 2) {
-            parallelMergeSort(4, arr, SIZE);
+            parallelMergeSort(8, arr, SIZE);
         } else {
             mergeSort(arr, SIZE);
         }

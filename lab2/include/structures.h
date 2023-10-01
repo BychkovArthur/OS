@@ -3,7 +3,9 @@
 
 typedef struct {
     int* arr;
+    int* buff;
     int size;
+    int threadCnt;
 } threadData_t;
 
 #endif // STRUCTURES_H
