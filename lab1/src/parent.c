@@ -11,8 +11,8 @@
 int main(int argc, char **argv)
 {
     // FileName
-    ssize_t fileNameLen = 128;
-    char* fileName = (char  *) malloc(fileNameLen * sizeof(char));
+    ssize_t fileNameLen = 0;
+    char* fileName = NULL;
     printf("Введите название файла:\n");
     fileNameLen = getline(&fileName, &fileNameLen, stdin);
     if (fileNameLen < 1 || fileNameLen >= PATH_MAX) {
@@ -155,8 +155,8 @@ int main(int argc, char **argv)
             perror("dup2 stdout error (child)");
             exit(1);
         }
-
-        if (execl("./build/child_exe", "./build/child_exe", fileName, NULL) == -1) {
+        // Разобраться с working directory у меня бинарник запускается или только из build или только через make run, надо чтобы и так и так
+        if (execl("child_exe", "child_exe", fileName, NULL) == -1) {
             perror("Exec error (parent)");
             exit(1);
         }
