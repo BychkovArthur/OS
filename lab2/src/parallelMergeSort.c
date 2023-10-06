@@ -42,6 +42,7 @@ void parallelMergeSort(int threadCount, int* arr, int size) {
         data[i].size = size / threadCount;
         data[i].threadCnt = threadCount;
     }
+    
     data[threadCount - 1].arr = arr + (threadCount - 1) * (size / threadCount);
     data[threadCount - 1].buff = buffer + (threadCount - 1) * (size / threadCount);
     data[threadCount - 1].size = size - (threadCount - 1) * (size / threadCount);
