@@ -1,5 +1,6 @@
 
 #include "../include/mergeSort.h"
+#include "../include/definitions.h"
 #include <stdio.h>
 // Спросить, это колхоз или как?
 
@@ -44,6 +45,6 @@ int* mergeSort(int* array, int size) {
         int buffer[size];
         for (int i = 0; i < size; ++i) {buffer[i] = array[i];} // Нужно заполнять, т.к. на любом уровне (в т.ч. где 1 элемент) может быть как buff, так и arr, даже для одного массива (например, если длина 7)
         // В этом случае, может возникнуть конфликт того, что я буду в merge писать или из buff в buff или из arr в arr
-        mergeSortAlgorithm(array, buffer, size, 1);
+        mergeSortAlgorithm(array, buffer, size, ARRAY);
     }
 }

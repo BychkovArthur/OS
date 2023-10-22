@@ -3,9 +3,8 @@
 #include "../include/mergeSort.h"
 #include "../include/parallelMergeSort.h"
 #include "../include/structures.h"
+#include "../include/definitions.h"
 
-#define BUFFER 0 
-#define ARRAY 1
 
 
 void* parallelMergeSortAlgorithm(void* dataForThread) {
@@ -42,7 +41,7 @@ void parallelMergeSort(int threadCount, int* arr, int size) {
         data[i].size = size / threadCount;
         data[i].threadCnt = threadCount;
     }
-    
+
     data[threadCount - 1].arr = arr + (threadCount - 1) * (size / threadCount);
     data[threadCount - 1].buff = buffer + (threadCount - 1) * (size / threadCount);
     data[threadCount - 1].size = size - (threadCount - 1) * (size / threadCount);

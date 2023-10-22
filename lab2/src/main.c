@@ -20,12 +20,10 @@ int main(int argc, char* argv[]) {
         threadCount = strToInt(argv[3]);
     }
 
-    int* arr = malloc(sizeof(int) * arraySize);
-
+    int* arr = (int*) malloc(sizeof(int) * arraySize);
     time_t start = time(NULL);
 
     for (int i = 0; i < forLoopTimes; ++i) {
-
         for (int j = 0; j < arraySize; ++j) {
             arr[j] = rand() % MAX_NUMBER;
         }
@@ -41,7 +39,6 @@ int main(int argc, char* argv[]) {
         } else {
             printf("Проверка №%d ОШИБКА\n", i + 1);
         }
-
     }
     time_t end = time(NULL);
     printf("Seconds: %ld\n", end - start);
