@@ -22,9 +22,15 @@ void executeTask(Task* task) {
     int* array = task->array;
     int* buffer = task->buffer;
     int size = task->size;
+    int type = task->type;
+    Task* otherTask = task->otherTask;
 
-    int locationOfSortedArray = threadCount == 4 ? ARRAY : BUFFER;
-    mergeSortAlgorithm(array, buffer, size, locationOfSortedArray);
+    if (type == REGULAR) {
+        int locationOfSortedArray = threadCount == 4 ? ARRAY : BUFFER;
+        mergeSortAlgorithm(array, buffer, size, locationOfSortedArray);
+    } else {
+        finishTask(array, buffer, otherTask);
+    }
 }
 
 void* startThread() {
@@ -44,53 +50,41 @@ void* startThread() {
     }
 }
 
+// Функция, которая выполняет последние слияния
+void finishTask(int* arr, int* buffer, Task* task) {
 
-void finishSorting(int** arrays, int** buffers, int forLoopTimes) {
-    for (int i = 0; i < forLoopTimes; ++i) {
-        int* arr = arrays[i];
-        int* buffer = buffers[i];
+    if (threadCount == 2) {
+        // В buff лежит отсортированный массив для каждого потока
+        merge(task[0].buffer, task[1].buffer, arr, task[0].size, task[1].size);
 
-        // Достаем задания для текущего массива
-        // Из массива всех заданий достается задание, которое отвечает за сортировку первой части массива
-        // Далее, арифметикой указателей обращаемся к каждой из частей
-        Task* task = &taskQueue[i * threadCount];
+    } else if (threadCount == 4) {
+        // В arr лежит отсортированный массив для каждого потока
+        int* res1 = merge(task[0].array, task[1].array, buffer, task[0].size, task[1].size);
+        int* res2 = merge(task[2].array, task[3].array, buffer + task[0].size + task[1].size, task[2].size, task[3].size);
+        merge(res1, res2, arr, task[0].size + task[1].size, task[2].size + task[3].size);
 
-        if (threadCount == 2) {
-            // В buff лежит отсортированный массив для каждого потока
-            merge(task[0].buffer, task[1].buffer, arr, task[0].size, task[1].size);
+    } else if (threadCount == 6) {
+        // В buff лежит отсортированный массив для каждого потока
+        int* res1 = merge(task[0].buffer, task[1].buffer, arr, task[0].size, task[1].size);
+        int* res2 = merge(task[2].buffer, task[3].buffer, arr + task[0].size + task[1].size, task[2].size, task[3].size);
+        int* res3 = merge(task[4].buffer, task[5].buffer, arr + task[0].size + task[1].size + task[2].size + task[3].size, task[4].size, task[5].size);
 
-        } else if (threadCount == 4) {
-            // В arr лежит отсортированный массив для каждого потока
-            int* res1 = merge(task[0].array, task[1].array, buffer, task[0].size, task[1].size);
-            int* res2 = merge(task[2].array, task[3].array, buffer + task[0].size + task[1].size, task[2].size, task[3].size);
-            merge(res1, res2, arr, task[0].size + task[1].size, task[2].size + task[3].size);
+        int* res4 = merge(res1, res2, buffer, task[0].size + task[1].size, task[2].size + task[3].size);
+        merge(res4, res3, arr, task[0].size + task[1].size + task[2].size + task[3].size, task[4].size + task[5].size);
 
-        } else if (threadCount == 6) {
-            // В buff лежит отсортированный массив для каждого потока
-            int* res1 = merge(task[0].buffer, task[1].buffer, arr, task[0].size, task[1].size);
-            int* res2 = merge(task[2].buffer, task[3].buffer, arr + task[0].size + task[1].size, task[2].size, task[3].size);
-            int* res3 = merge(task[4].buffer, task[5].buffer, arr + task[0].size + task[1].size + task[2].size + task[3].size, task[4].size, task[5].size);
+    } else if (threadCount == 8) {
+        // В buff лежит отсортированный массив для каждого потока
+        int* res1 = merge(task[0].buffer, task[1].buffer, arr, task[0].size, task[1].size);
+        int* res2 = merge(task[2].buffer, task[3].buffer, arr + task[0].size + task[1].size, task[2].size, task[3].size);
+        int* res3 = merge(task[4].buffer, task[5].buffer, arr + task[0].size + task[1].size + task[2].size + task[3].size, task[4].size, task[5].size);
+        int* res4 = merge(task[6].buffer, task[7].buffer, arr + task[0].size + task[1].size + task[2].size + task[3].size + task[4].size + task[5].size, task[6].size, task[7].size);
 
-            int* res4 = merge(res1, res2, buffer, task[0].size + task[1].size, task[2].size + task[3].size);
-            merge(res4, res3, arr, task[0].size + task[1].size + task[2].size + task[3].size, task[4].size + task[5].size);
+        int* res5 = merge(res1, res2, buffer, task[0].size + task[1].size, task[2].size + task[3].size);
+        int* res6 = merge(res3, res4, buffer + task[0].size + task[1].size + task[2].size + task[3].size, task[4].size + task[5].size, task[6].size + task[7].size);
 
-        } else if (threadCount == 8) {
-            // В buff лежит отсортированный массив для каждого потока
-            int* res1 = merge(task[0].buffer, task[1].buffer, arr, task[0].size, task[1].size);
-            int* res2 = merge(task[2].buffer, task[3].buffer, arr + task[0].size + task[1].size, task[2].size, task[3].size);
-            int* res3 = merge(task[4].buffer, task[5].buffer, arr + task[0].size + task[1].size + task[2].size + task[3].size, task[4].size, task[5].size);
-            int* res4 = merge(task[6].buffer, task[7].buffer, arr + task[0].size + task[1].size + task[2].size + task[3].size + task[4].size + task[5].size, task[6].size, task[7].size);
-
-            int* res5 = merge(res1, res2, buffer, task[0].size + task[1].size, task[2].size + task[3].size);
-            int* res6 = merge(res3, res4, buffer + task[0].size + task[1].size + task[2].size + task[3].size, task[4].size + task[5].size, task[6].size + task[7].size);
-
-            merge(res5, res6, arr, task[0].size + task[1].size + task[2].size + task[3].size, task[4].size + task[5].size + task[6].size + task[7].size);
-        }
-
+        merge(res5, res6, arr, task[0].size + task[1].size + task[2].size + task[3].size, task[4].size + task[5].size + task[6].size + task[7].size);
     }
 }
-
-
 
 
 int main(int argc, char* argv[]) {
@@ -107,7 +101,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Если я не смогу в массив добавить все задания
-    if (forLoopTimes * threadCount > MAX_TASKS_COUNT) {
+    if (forLoopTimes * (threadCount + 1) > MAX_TASKS_COUNT) {
         perror("Can't create so many tasks");
         return 1;
     }
@@ -148,12 +142,6 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    // Одним потоком завершаю все сортировки
-    // Это тоже можно распихать по разным потокам
-    // Эта часть по сути тормозит все...
-    printf("Seconds before: %ld\n", time(NULL) - start);
-    finishSorting(arrays, buffers, forLoopTimes);
-    printf("Seconds after: %ld\n", time(NULL) - start);
     for (int i = 0; i < forLoopTimes; ++i) {
         int* arr = arrays[i];
         if (isArrayStrictlyIncreasing(arr, arraySize)) {
@@ -162,7 +150,6 @@ int main(int argc, char* argv[]) {
             printf("Проверка №%d ОШИБКА\n", i + 1);
         }
     }
-    
     
     time_t end = time(NULL);
     // Освободить память

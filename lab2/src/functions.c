@@ -50,6 +50,7 @@ void createRandomTasks(int** arrays, int** buffers, Task* taskQueue, int forLoop
                 .array = arr + j * (arraySize / threadCount),
                 .buffer = buffer + j * (arraySize / threadCount),
                 .size = arraySize / threadCount,
+                .type = REGULAR,
             };
             taskQueue[(*taskCount)++] = task;
         }
@@ -57,7 +58,32 @@ void createRandomTasks(int** arrays, int** buffers, Task* taskQueue, int forLoop
                 .array = arr + (threadCount - 1) * (arraySize / threadCount),
                 .buffer = buffer + (threadCount - 1) * (arraySize / threadCount),
                 .size = arraySize - (threadCount - 1) * (arraySize / threadCount),
+                .type = REGULAR,
         };
         taskQueue[(*taskCount)++] = task;
+    }
+
+    if (threadCount != 1) {
+        // Создаем задания для завершения сортировки
+        // Вынести в отдельную функцию
+        // МБ, сделать задания для завершения другим типом
+        for (int i = 0; i < forLoopTimes; ++i) {
+            int* arr = arrays[i];
+            int* buffer = buffers[i];
+
+            // Достаем задания для текущего массива
+            // Из массива всех заданий достается задание, которое отвечает за сортировку первой части массива
+            // Далее, арифметикой указателей обращаемся к каждой из частей
+            Task* taskForFunction = &taskQueue[i * threadCount];
+
+            Task task = {
+                    .array = arr,
+                    .buffer = buffer,
+                    .size = -1,
+                    .type = FINISH,
+                    .otherTask = taskForFunction,
+            };
+            taskQueue[(*taskCount)++] = task;
+        }
     }
 }
