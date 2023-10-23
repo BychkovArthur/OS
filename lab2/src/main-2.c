@@ -2,44 +2,59 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include <unistd.h> // for sleep
 #include "../include/mergeSort.h"
 #include "../include/parallelMergeSort.h"
 #include "../include/functions.h"
 #include "../include/structures.h"
 #include "../include/definitions.h"
 
-// Когда надо отсортировать большое количество массивов.
-// Сделать две структуры МБ
 pthread_mutex_t mutexQueue;
-Task taskQueue[MAX_TASKS_COUNT];
-int taskCount = 0;
-int currentTaskNumber = 0;
+regularTask_t* regularTaskQueue;
+finishTask_t* finishTaskQueue;
 int threadCount;
-int tasksComplete = 0;
+int regularTaskCount = 0;
+int regularTaskComplete = 0;
+int finishTaskCount = 0;
+int finishTaskComplete = 0;
+int allTasksComplete = 0;
 
 // Потоки входят в эту функцию и поочередно забирают задания
 void* startThread() {
     while (1) {
-        Task task;
+        regularTask_t regularTask;
+        finishTask_t finishTask;
+        
         if (pthread_mutex_lock(&mutexQueue) != 0) {
             perror("Mutex lock error");
             return NULL;
         }
-        task = taskQueue[currentTaskNumber++];
-        if (currentTaskNumber > taskCount) {
-            tasksComplete = 1;
+
+        if (regularTaskComplete < regularTaskCount) {
+            regularTask = regularTaskQueue[regularTaskComplete++];
+
+        } else if (regularTaskComplete ==  regularTaskCount && finishTaskComplete < finishTaskCount) {
+            finishTask = finishTaskQueue[finishTaskComplete++];
+
+        } else if (regularTaskComplete ==  regularTaskCount && finishTaskComplete == finishTaskCount) {
+            allTasksComplete = 1;
         }
         
         if (pthread_mutex_unlock(&mutexQueue) != 0) {
             perror("Mutex unlock error");
             return NULL;
         }
-        if (tasksComplete) {
+
+        if (allTasksComplete) {
             break;
         }
-        printf("Задание %d начало выполнение\n", currentTaskNumber);
-        executeTask(&task, threadCount);
+
+        if (finishTaskComplete == 0) {
+            printf("Обычное задание №%d начало выполнение\n", regularTaskComplete);
+            executeRegularTask(&regularTask, threadCount);
+        } else {
+            printf("Завершающее задание №%d начало выполнение\n", finishTaskComplete);
+            executeFinishTask(&finishTask, threadCount);
+        }
     }
 }
 
@@ -56,9 +71,10 @@ int main(int argc, char* argv[]) {
         threadCount = strToInt(argv[3]);
     }
 
-    // Если я не смогу в массив добавить все задания
-    if (NumberOfArrays * (threadCount + 1) > MAX_TASKS_COUNT) {
-        perror("Can't create so many tasks");
+    regularTaskQueue = (regularTask_t*) malloc(sizeof(regularTask_t) * NumberOfArrays * threadCount);
+    finishTaskQueue = (finishTask_t*) malloc(sizeof(finishTask_t) * NumberOfArrays);
+    if (regularTaskQueue == NULL || finishTaskQueue == NULL) {
+        perror("Can't allocate memory for queue's");
         return 1;
     }
 
@@ -66,14 +82,14 @@ int main(int argc, char* argv[]) {
     int* buffers[NumberOfArrays];
     
     // Создание заданий, которые будут выполнять потоки
-    createRandomTasks(arrays, buffers, taskQueue, NumberOfArrays,
-                      arraySize, threadCount, &taskCount);
+    createRandomTasks(arrays, buffers, regularTaskQueue, finishTaskQueue, NumberOfArrays,
+                      arraySize, threadCount, &regularTaskCount, &finishTaskCount);
     
     if (pthread_mutex_init(&mutexQueue, NULL) != 0) {
         perror("Mutex init error");
         return 1;
     }
-
+    
     pthread_t threads[threadCount];
     time_t start = time(NULL);
 

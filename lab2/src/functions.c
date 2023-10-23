@@ -39,13 +39,17 @@ int strToInt(char* str) {
     return result;
 }
 
-void createRandomTasks(int** arrays, int** buffers, Task* taskQueue, int NumberOfArrays, int arraySize, int threadCount, int* taskCount)
+void createRandomTasks(int** arrays, int** buffers, regularTask_t* regularTaskQueue, finishTask_t* finishTaskQueue, int NumberOfArrays, int arraySize, int threadCount, int* regularTaskCount, int* finishTaskCount)
 {
     srand(time(NULL));
 
     for (int i = 0; i < NumberOfArrays; ++i) {
         int* arr = (int*) malloc(sizeof(int) * arraySize);
         int* buffer = (int*) malloc(sizeof(int) * arraySize);
+        if (arr == NULL || buffer == NULL) {
+            perror("Can't allocate memory for arrays");
+            return;
+        }
         arrays[i] = arr; // Запоминаем указатель на массив
         buffers[i] = buffer;
 
@@ -57,65 +61,62 @@ void createRandomTasks(int** arrays, int** buffers, Task* taskQueue, int NumberO
         // Создаем задания по сортировки части массива равной 1/threadCnt от всего массива
         for (int j = 0; j < threadCount - 1; ++j) {
             // Одно задание - сортировка одной небольшой части массива
-            Task task = {
+            regularTask_t regularTask = {
                 .array = arr + j * (arraySize / threadCount),
                 .buffer = buffer + j * (arraySize / threadCount),
                 .size = arraySize / threadCount,
-                .type = REGULAR,
             };
-            taskQueue[(*taskCount)++] = task;
+            regularTaskQueue[(*regularTaskCount)++] = regularTask;
         }
-        Task task = {
+        regularTask_t regularTask = {
                 .array = arr + (threadCount - 1) * (arraySize / threadCount),
                 .buffer = buffer + (threadCount - 1) * (arraySize / threadCount),
                 .size = arraySize - (threadCount - 1) * (arraySize / threadCount),
-                .type = REGULAR,
         };
-        taskQueue[(*taskCount)++] = task;
+        regularTaskQueue[(*regularTaskCount)++] = regularTask;
     }
 
     if (threadCount != 1) {
         // Создаем задания для завершения сортировки
-        // Вынести в отдельную функцию
-        // МБ, сделать задания для завершения другим типом
         for (int i = 0; i < NumberOfArrays; ++i) {
+            // Беру почти отсортированный массиув и буффер для него
             int* arr = arrays[i];
             int* buffer = buffers[i];
 
             // Достаем задания для текущего массива
             // Из массива всех заданий достается задание, которое отвечает за сортировку первой части массива
             // Далее, арифметикой указателей обращаемся к каждой из частей
-            Task* taskForFunction = &taskQueue[i * threadCount];
+            regularTask_t* regularTaskForFunction = &regularTaskQueue[i * threadCount];
 
-            Task task = {
+            finishTask_t finishTask = {
                     .array = arr,
                     .buffer = buffer,
-                    .size = -1,
-                    .type = FINISH,
-                    .otherTask = taskForFunction,
+                    .regularTask = regularTaskForFunction,
             };
-            taskQueue[(*taskCount)++] = task;
+            finishTaskQueue[(*finishTaskCount)++] = finishTask;
         }
     }
 }
 
-void executeTask(Task* task, int threadCount) {
+void executeRegularTask(regularTask_t* task, int threadCount) {
     int* array = task->array;
     int* buffer = task->buffer;
     int size = task->size;
-    int type = task->type;
-    Task* otherTask = task->otherTask;
 
-    if (type == REGULAR) {
-        int locationOfSortedArray = threadCount == 4 ? ARRAY : BUFFER;
-        mergeSortAlgorithm(array, buffer, size, locationOfSortedArray);
-    } else {
-        finishTask(array, buffer, otherTask, threadCount);
-    }
+    int locationOfSortedArray = threadCount == 4 ? ARRAY : BUFFER;
+    mergeSortAlgorithm(array, buffer, size, locationOfSortedArray);
+}
+
+void executeFinishTask(finishTask_t* task, int threadCount) {
+    int* array = task->array;
+    int* buffer = task->buffer;
+    regularTask_t* otherTask = task->regularTask;
+
+    finishTask(array, buffer, otherTask, threadCount);
 }
 
 // Функция, которая выполняет последние слияния
-void finishTask(int* arr, int* buffer, Task* task, int threadCount) {
+void finishTask(int* arr, int* buffer, regularTask_t* task, int threadCount) {
 
     if (threadCount == 2) {
         // В buff лежит отсортированный массив для каждого потока

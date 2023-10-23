@@ -3,7 +3,9 @@
 
 typedef struct threadData_t threadData_t;
 
-typedef struct Task Task;
+typedef struct regularTask_t regularTask_t;
+
+typedef struct finishTask_t finishTask_t;
 
 typedef struct threadData_t {
     int* arr;
@@ -12,12 +14,16 @@ typedef struct threadData_t {
     int threadCnt;
 } threadData_t;
 
-typedef struct Task {
+typedef struct regularTask_t {
     int* array;
     int* buffer;
     int size;
-    int type;
-    Task* otherTask;
-} Task;
+} regularTask_t;
+
+typedef struct finishTask_t {
+    int* array;
+    int* buffer;
+    regularTask_t* regularTask;
+} finishTask_t;
 
 #endif // STRUCTURES_H
