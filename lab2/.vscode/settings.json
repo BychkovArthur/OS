@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "mergesort.h": "c",
+        "stdio.h": "c",
+        "definitions.h": "c"
+    }
+}
