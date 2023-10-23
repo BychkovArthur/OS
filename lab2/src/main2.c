@@ -10,6 +10,7 @@
 #include "../include/definitions.h"
 
 // Когда надо отсортировать большое количество массивов.
+// Сделать две структуры МБ
 pthread_mutex_t mutexQueue;
 Task taskQueue[MAX_TASKS_COUNT];
 int taskCount = 0;
@@ -17,112 +18,68 @@ int currentTaskNumber = 0;
 int threadCount;
 int tasksComplete = 0;
 
-
-void executeTask(Task* task) {
-    int* array = task->array;
-    int* buffer = task->buffer;
-    int size = task->size;
-    int type = task->type;
-    Task* otherTask = task->otherTask;
-
-    if (type == REGULAR) {
-        int locationOfSortedArray = threadCount == 4 ? ARRAY : BUFFER;
-        mergeSortAlgorithm(array, buffer, size, locationOfSortedArray);
-    } else {
-        finishTask(array, buffer, otherTask);
-    }
-}
-
+// Потоки входят в эту функцию и поочередно забирают задания
 void* startThread() {
     while (1) {
         Task task;
-        pthread_mutex_lock(&mutexQueue);
+        if (pthread_mutex_lock(&mutexQueue) != 0) {
+            perror("Mutex lock error");
+            return NULL;
+        }
         task = taskQueue[currentTaskNumber++];
         if (currentTaskNumber > taskCount) {
             tasksComplete = 1;
-        } 
-        pthread_mutex_unlock(&mutexQueue);
+        }
+        
+        if (pthread_mutex_unlock(&mutexQueue) != 0) {
+            perror("Mutex unlock error");
+            return NULL;
+        }
         if (tasksComplete) {
             break;
         }
         printf("Задание %d начало выполнение\n", currentTaskNumber);
-        executeTask(&task);
+        executeTask(&task, threadCount);
     }
 }
-
-// Функция, которая выполняет последние слияния
-void finishTask(int* arr, int* buffer, Task* task) {
-
-    if (threadCount == 2) {
-        // В buff лежит отсортированный массив для каждого потока
-        merge(task[0].buffer, task[1].buffer, arr, task[0].size, task[1].size);
-
-    } else if (threadCount == 4) {
-        // В arr лежит отсортированный массив для каждого потока
-        int* res1 = merge(task[0].array, task[1].array, buffer, task[0].size, task[1].size);
-        int* res2 = merge(task[2].array, task[3].array, buffer + task[0].size + task[1].size, task[2].size, task[3].size);
-        merge(res1, res2, arr, task[0].size + task[1].size, task[2].size + task[3].size);
-
-    } else if (threadCount == 6) {
-        // В buff лежит отсортированный массив для каждого потока
-        int* res1 = merge(task[0].buffer, task[1].buffer, arr, task[0].size, task[1].size);
-        int* res2 = merge(task[2].buffer, task[3].buffer, arr + task[0].size + task[1].size, task[2].size, task[3].size);
-        int* res3 = merge(task[4].buffer, task[5].buffer, arr + task[0].size + task[1].size + task[2].size + task[3].size, task[4].size, task[5].size);
-
-        int* res4 = merge(res1, res2, buffer, task[0].size + task[1].size, task[2].size + task[3].size);
-        merge(res4, res3, arr, task[0].size + task[1].size + task[2].size + task[3].size, task[4].size + task[5].size);
-
-    } else if (threadCount == 8) {
-        // В buff лежит отсортированный массив для каждого потока
-        int* res1 = merge(task[0].buffer, task[1].buffer, arr, task[0].size, task[1].size);
-        int* res2 = merge(task[2].buffer, task[3].buffer, arr + task[0].size + task[1].size, task[2].size, task[3].size);
-        int* res3 = merge(task[4].buffer, task[5].buffer, arr + task[0].size + task[1].size + task[2].size + task[3].size, task[4].size, task[5].size);
-        int* res4 = merge(task[6].buffer, task[7].buffer, arr + task[0].size + task[1].size + task[2].size + task[3].size + task[4].size + task[5].size, task[6].size, task[7].size);
-
-        int* res5 = merge(res1, res2, buffer, task[0].size + task[1].size, task[2].size + task[3].size);
-        int* res6 = merge(res3, res4, buffer + task[0].size + task[1].size + task[2].size + task[3].size, task[4].size + task[5].size, task[6].size + task[7].size);
-
-        merge(res5, res6, arr, task[0].size + task[1].size + task[2].size + task[3].size, task[4].size + task[5].size + task[6].size + task[7].size);
-    }
-}
-
 
 int main(int argc, char* argv[]) {
 
-    int arraySize, forLoopTimes;
+    int arraySize, NumberOfArrays;
 
     if (argc != 4) {
         usage();
         return 1;
     } else {
         arraySize = strToInt(argv[1]);
-        forLoopTimes = strToInt(argv[2]);
+        NumberOfArrays = strToInt(argv[2]);
         threadCount = strToInt(argv[3]);
     }
 
     // Если я не смогу в массив добавить все задания
-    if (forLoopTimes * (threadCount + 1) > MAX_TASKS_COUNT) {
+    if (NumberOfArrays * (threadCount + 1) > MAX_TASKS_COUNT) {
         perror("Can't create so many tasks");
         return 1;
     }
 
-    int* arrays[forLoopTimes];
-    int* buffers[forLoopTimes];
+    int* arrays[NumberOfArrays];
+    int* buffers[NumberOfArrays];
     
-
-    createRandomTasks(arrays, buffers, taskQueue, forLoopTimes,
+    // Создание заданий, которые будут выполнять потоки
+    createRandomTasks(arrays, buffers, taskQueue, NumberOfArrays,
                       arraySize, threadCount, &taskCount);
     
-
-    printf("tasks: %d\n", taskCount);
+    if (pthread_mutex_init(&mutexQueue, NULL) != 0) {
+        perror("Mutex init error");
+        return 1;
+    }
 
     pthread_t threads[threadCount];
-    pthread_mutex_init(&mutexQueue, NULL);
     time_t start = time(NULL);
 
     if (threadCount == 1) {
         // Просто сортируем без потоков
-        for (int i = 0; i < forLoopTimes; ++i) {
+        for (int i = 0; i < NumberOfArrays; ++i) {
             int* array = arrays[i];
             int* buffer = buffers[i];
             mergeSortAlgorithm(array, buffer, arraySize, ARRAY);
@@ -132,28 +89,33 @@ int main(int argc, char* argv[]) {
         for (int i = 0; i < threadCount; ++i) {
             if (pthread_create(&threads[i], NULL, &startThread, NULL)) {
                 perror("Thread create error");
+                return 1;
             }
-        }        
+        }
         // Завершение потоков
         for (int i = 0; i < threadCount; ++i) {
             if (pthread_join(threads[i], NULL)) {
                 perror("Thread join error");
+                return 1;
             }
         }
     }
 
-    for (int i = 0; i < forLoopTimes; ++i) {
-        int* arr = arrays[i];
-        if (isArrayStrictlyIncreasing(arr, arraySize)) {
-            printf("Проверка №%d УСПЕХ\n", i + 1);
-        } else {
-            printf("Проверка №%d ОШИБКА\n", i + 1);
-        }
+    if (isArraysStrictlyIncreasing(arrays, NumberOfArrays, arraySize)) {
+        printf("Все %d массивов отсортированы верно\n", NumberOfArrays);
+    } else {
+        printf("Один из массивов отсортирован неверно!\n\n");
     }
     
     time_t end = time(NULL);
-    // Освободить память
     printf("Seconds: %ld\n", end - start);
-    pthread_mutex_destroy(&mutexQueue);
+    if (pthread_mutex_destroy(&mutexQueue) != 0) {
+        perror("Mutex destroy error");
+        return 1;
+    }
+    for (int i = 0; i < NumberOfArrays; ++i) {
+        free(arrays[i]);
+        free(buffers[i]);
+    }
     return 0;
 }

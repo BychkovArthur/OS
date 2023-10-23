@@ -10,20 +10,20 @@
 // Выделить проге больше памяти
 
 int main(int argc, char* argv[]) {
-    int arraySize, forLoopTimes, threadCount;
+    int arraySize, NumberOfArrays, threadCount;
     if (argc != 4) {
         usage();
         return 1;
     } else {
         arraySize = strToInt(argv[1]);
-        forLoopTimes = strToInt(argv[2]);
+        NumberOfArrays = strToInt(argv[2]);
         threadCount = strToInt(argv[3]);
     }
 
     int* arr = (int*) malloc(sizeof(int) * arraySize);
     time_t start = time(NULL);
 
-    for (int i = 0; i < forLoopTimes; ++i) {
+    for (int i = 0; i < NumberOfArrays; ++i) {
         for (int j = 0; j < arraySize; ++j) {
             arr[j] = rand() % MAX_NUMBER;
         }
