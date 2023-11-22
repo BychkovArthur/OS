@@ -41,8 +41,8 @@ double devide(int* array, int numberOfNumbers, int* childProcessExitStatus) {
         if (array[i] == 0) {
             perror("Divizion by zero (child)");
             *childProcessExitStatus = 1;
-            write(STDOUT_FILENO, childProcessExitStatus, sizeof(int));
-            exit(1);
+            free(array);
+            return -1.0;
         }
         result /= array[i];
     }
@@ -63,5 +63,11 @@ void fileNameValidation(char* fileName) {
     if (fileName[0] == '\0') {
         perror("Invalid fileName (parent)");
         exit(1);
+    }
+}
+
+void updateQuitStatus(char* stringOfNumbers, int charactersReaded, int* qStatus) {
+    if ((charactersReaded == 2 && stringOfNumbers[0] == 'q' && stringOfNumbers[1] == '\n') || (charactersReaded == 1 && stringOfNumbers[0] == 'q')) {
+        *qStatus = 1;
     }
 }
