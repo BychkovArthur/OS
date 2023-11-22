@@ -36,6 +36,9 @@ int readFileName(char* fileName) {
         fileName[cnt++] = c;
         c = getchar();
     }
+    if (cnt == 0) {
+        isFileNameVaild = ERROR;
+    }
     if (isFileNameVaild == OK) {
         fileName[cnt] = '\0';
     }

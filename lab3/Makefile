@@ -1,12 +1,21 @@
-.PHONY: build run
+.PHONY: build run parent child clean
 
 CC=gcc
 FLAGS=-Wall -Werror -Wextra -std=c11 -fsanitize=address
 BUILD=./build/
 SRC=./src/
 
-build:
-	$(CC) $(FLAGS) $(SRC)parent.c $(SRC)functions.c -o $(BUILD)parent
+build: child parent
+	
+
+parent: parent.c functions.c
+	$(CC) $(FLAGS) $(SRC)parent.c $(SRC)functions.c -o $(BUILD)parent_exe
+
+child: child.c functions.c
+	$(CC) $(FLAGS) $(SRC)child.c $(SRC)functions.c -o $(BUILD)child_exe
 
 run:
 	$(BUILD)parent
+
+clean:
+	rm -rf $(BUILD)*_exe

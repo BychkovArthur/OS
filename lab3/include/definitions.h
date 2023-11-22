@@ -5,4 +5,6 @@
 #define ERROR 0
 #define OK 1
 
+#define SHARED_MEMORY_NAME "/shared_memory_lab3_OS"
+
 #endif //DEFENITIONS_H
