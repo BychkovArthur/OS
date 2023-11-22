@@ -8,14 +8,14 @@ SRC=./src/
 build: child parent
 	
 
-parent: parent.c functions.c
+parent: $(SRC)parent.c $(SRC)functions.c
 	$(CC) $(FLAGS) $(SRC)parent.c $(SRC)functions.c -o $(BUILD)parent_exe
 
-child: child.c functions.c
+child: $(SRC)child.c $(SRC)functions.c
 	$(CC) $(FLAGS) $(SRC)child.c $(SRC)functions.c -o $(BUILD)child_exe
 
 run:
-	$(BUILD)parent
+	$(BUILD)parent_exe
 
 clean:
 	rm -rf $(BUILD)*_exe

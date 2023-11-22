@@ -36,7 +36,7 @@ int main() {
             return 1;
         }
 
-        if (execl("./build/ch   ild_exe", "./build/child_exe", fileName, NULL) == -1) {
+        if (execl("./build/child_exe", "./build/child_exe", fileName, NULL) == -1) {
             perror("exec error (child)");
             return 1;
         }
