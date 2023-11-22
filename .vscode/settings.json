@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "parallelmergesort.h": "c",
+        "mergesort.h": "c",
+        "functions.h": "c",
+        "time.h": "c"
+    }
+}
