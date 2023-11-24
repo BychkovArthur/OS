@@ -97,15 +97,14 @@ void createChildProcess(sem_t* semaphoreChild, sem_t* semaphoreParent, int share
 
 // TODO:
 // - Надо сделать, чтобы в независимости от запуска через бинарник или через make все работало одинаково
-// - Передача ошибок от ребенка к родителю
-// - в child ВЕЗДЕ ЗАКРЫТЬ ФАЙЛЫ
 // - создание SHM в функцию
-// - заифать на ошибку sem_post, sem_wait, memcpy
 
-// - ПОЧЕМУ ЕСЛИ Я ПРОСТО ВТОРОЙ ФАЙЛОВЫЙ ДЕСКРИПТОР ПЕРЕДАВАЛ КАК ЧИСЛО И ДЕЛЛАЛ MMAP ПРОСТО С ЭТИМ ЧИСЛОМ У
+// СРОСИТЬ:
+
+// 1) ПОЧЕМУ ЕСЛИ Я ПРОСТО ВТОРОЙ ФАЙЛОВЫЙ ДЕСКРИПТОР ПЕРЕДАВАЛ КАК ЧИСЛО И ДЕЛЛАЛ MMAP ПРОСТО С ЭТИМ ЧИСЛОМ У
 // МЕНЯ БЫЛО BAD FILE DESCRIPTOR, А ПОМЕНЯВ НА DUP2 ВСЕ ОК:???????
 
-// - не колхоз ли связать процессы для обработки ошибок еще одним shm???? (мб сделать сигналы????)
+// 2) не колхоз ли связать процессы для обработки ошибок еще одним shm???? (мб сделать сигналы????)
 // - сигналы мимо, я, кажется, никак не смогу нормально выйти из цикла или другие действия сделать.
 
 int main() {
@@ -134,6 +133,8 @@ int main() {
 
     reopenSemaphore(&semaphoreChild, &semaphoreParent);
 
+    printf("Введите имя файла: ");
+
     if (readFileName(fileName) == ERROR) {
         fprintf(stderr, "Invalid file name %s (parent)\n", fileName);
         freeAllResources(semaphoreChild, semaphoreParent);
@@ -152,7 +153,13 @@ int main() {
 
     // Parent process
     while (1) {
-        sem_wait(semaphoreParent);
+        if (sem_wait(semaphoreParent) == -1) {
+            perror("sem_wait (parent)");
+            freeAllResources(semaphoreChild, semaphoreParent);
+            exit(1);
+        }
+
+        // Была ошибка в дочернем процессе
         if (errorsAndExitStatus[0] == CHILD_PROCESS_ERROR_QUIT) {
             break;
         }
@@ -175,7 +182,11 @@ int main() {
         if (qStatus) {
             free(inputString);
             errorsAndExitStatus[0] = GENERAL_QUIT;
-            sem_post(semaphoreChild);
+            if (sem_post(semaphoreChild) == -1) {
+                perror("sem_post (parent)");
+                freeAllResources(semaphoreChild, semaphoreParent);
+                exit(1);
+            }
             break;
         }
 
@@ -220,7 +231,11 @@ int main() {
         memcpy(arrayInSharedMemory, arrayOfNumbers, sizeof(int) * numberOfNumbers);
         free(inputString);
         free(arrayOfNumbers);
-        sem_post(semaphoreChild);
+        if (sem_post(semaphoreChild) == -1) {
+            perror("sem_post (parent)");
+            freeAllResources(semaphoreChild, semaphoreParent);
+            exit(1);
+        }
     }
 
     if (waitpid(pid, NULL, 0) == -1) {

@@ -29,28 +29,39 @@ int main(int argc, char* argv[]) {
         (semaphoreChild = sem_open(SEMAPHORE_FOR_SHM_2, O_CREAT, S_IRWXU, 0)) == SEM_FAILED) {
         perror("semaphore (child)");
         errorsAndExitStatus[0] = CHILD_PROCESS_ERROR_QUIT;
-        sem_post(semaphoreParent);
         exit(1);
     }
 
     if (argc != 2) {
         fprintf(stderr, "Invalid argumetns\n");
         errorsAndExitStatus[0] = CHILD_PROCESS_ERROR_QUIT;
-        sem_post(semaphoreParent);
+        if (sem_post(semaphoreParent) == -1) {
+            perror("sem_post (child)");
+        }
+
         exit(1);
     }
 
     if ((outputFile = fopen(argv[1], "w")) == NULL) {
         fprintf(stderr, "Can't open file (child)\n");
         errorsAndExitStatus[0] = CHILD_PROCESS_ERROR_QUIT;
-        sem_post(semaphoreParent);
+        if (sem_post(semaphoreParent) == -1) {
+            perror("sem_post (child)");
+        }
         exit(1);
     }
 
     while (1) {
-        sem_wait(semaphoreChild);
+        if (sem_wait(semaphoreChild) == -1) {
+            perror("sem_wait (child)");
+            exit(1);
+        }
+
         if (errorsAndExitStatus[0] == GENERAL_QUIT) {
-            sem_post(semaphoreParent);
+            if (sem_post(semaphoreParent) == -1) {
+                perror("sem_post (child)");
+                exit(1);
+            }
             break;
         }
 
@@ -58,7 +69,9 @@ int main(int argc, char* argv[]) {
             perror("Can't get file size (child)");
             errorsAndExitStatus[0] = CHILD_PROCESS_ERROR_QUIT;
             fclose(outputFile);
-            sem_post(semaphoreParent);
+            if (sem_post(semaphoreParent) == -1) {
+                perror("sem_post (child)");
+            }
             exit(1);
         }
 
@@ -67,7 +80,9 @@ int main(int argc, char* argv[]) {
             perror("mmap (child)");
             errorsAndExitStatus[0] = CHILD_PROCESS_ERROR_QUIT;
             fclose(outputFile);
-            sem_post(semaphoreParent);
+            if (sem_post(semaphoreParent) == -1) {
+                perror("sem_post (child)");
+            }
             exit(1);
         }
 
@@ -76,7 +91,9 @@ int main(int argc, char* argv[]) {
         if (resultOfDivision == -1.0 && childProcessExitStatus) {
             errorsAndExitStatus[0] = CHILD_PROCESS_ERROR_QUIT;
             fclose(outputFile);
-            sem_post(semaphoreParent);
+            if (sem_post(semaphoreParent) == -1) {
+                perror("sem_post (child)");
+            }
             exit(1);
         }
 
@@ -84,18 +101,24 @@ int main(int argc, char* argv[]) {
             perror("Can't write in output file (child)");
             errorsAndExitStatus[0] = CHILD_PROCESS_ERROR_QUIT;
             fclose(outputFile);
-            sem_post(semaphoreParent);
+            if (sem_post(semaphoreParent) == -1) {
+                perror("sem_post (child)");
+            }
             exit(1);
         }
 
-        sem_post(semaphoreParent);
+        if (sem_post(semaphoreParent) == -1) {
+            perror("sem_post (child)");
+        }
     }
 
     if (sem_close(semaphoreParent) == -1 || sem_close(semaphoreChild) == -1) {
         perror("semaphore close (child)");
         errorsAndExitStatus[0] = CHILD_PROCESS_ERROR_QUIT;
         fclose(outputFile);
-        sem_post(semaphoreParent);
+        if (sem_post(semaphoreParent) == -1) {
+            perror("sem_post (child)");
+        }
         exit(1);
     }
 
