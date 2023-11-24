@@ -9,9 +9,8 @@ double devide(int* array, int numberOfNumbers, int* childProcessExitStatus) {
     double result = array[0];
     for (int i = 1; i < numberOfNumbers; ++i) {
         if (array[i] == 0) {
-            perror("Divizion by zero (child)");
+            fprintf(stderr, "Divizion by zero (child)\n");
             *childProcessExitStatus = 1;
-            free(array);
             return -1.0;
         }
         result /= array[i];
@@ -45,12 +44,12 @@ int readFileName(char* fileName) {
     return isFileNameVaild;
 }
 
-int getNumberOfNumbers(char* stringOfNumbers, int stringLen) {
+int getNumberOfNumbers(char* stringOfNumbers, size_t stringLen) {
     if (stringLen == 0 || (stringLen == 1 && stringOfNumbers[0] == '\n')) {
         return 0;
     }
     int spaceCount = 0;
-    for (int i = 0; i < stringLen; ++i) {
+    for (size_t i = 0; i < stringLen; ++i) {
         if (stringOfNumbers[i] == ' ') {
             ++spaceCount;
         }
@@ -58,10 +57,10 @@ int getNumberOfNumbers(char* stringOfNumbers, int stringLen) {
     return spaceCount + 1;
 }
 
-void fillArrayWithNumbers(char* stringOfNumbers, int stringLen, int* array) {
+void fillArrayWithNumbers(char* stringOfNumbers, size_t stringLen, int* array) {
     int currentNumber = 0;
     int arrayIndex = 0;
-    for (int i = 0; i < stringLen; ++i) {
+    for (size_t i = 0; i < stringLen; ++i) {
         if (!(stringOfNumbers[i] == ' ' || stringOfNumbers[i] == '\n')) {
             currentNumber *= 10;
             currentNumber += stringOfNumbers[i] - '0';
@@ -74,5 +73,12 @@ void fillArrayWithNumbers(char* stringOfNumbers, int stringLen, int* array) {
     // Если конец строки через EOF, нужно обработать последний элемент
     if (currentNumber) {
         array[arrayIndex] = currentNumber;
+    }
+}
+
+void updateQuitStatus(char* stringOfNumbers, int charactersReaded, int* qStatus) {
+    if ((charactersReaded == 2 && stringOfNumbers[0] == 'q' && stringOfNumbers[1] == '\n') ||
+        (charactersReaded == 1 && stringOfNumbers[0] == 'q')) {
+        *qStatus = 1;
     }
 }
