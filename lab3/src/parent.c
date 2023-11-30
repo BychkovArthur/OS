@@ -1,5 +1,7 @@
 #define _GNU_SOURCE
 #include <fcntl.h>
+#include <libgen.h>  // для dirname
+#include <limits.h>
 #include <semaphore.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -78,6 +80,23 @@ void freeAllResources(sem_t* semaphoreChild, sem_t* semaphoreParent) {
 
 void createChildProcess(sem_t* semaphoreChild, sem_t* semaphoreParent, int sharedMemoryFD,
                         int sharedMemoryFDErr, const char* fileName) {
+    char pathName[PATH_MAX];
+    ssize_t count = readlink("/proc/self/exe", pathName, sizeof(pathName) - 1);
+
+    if (count != -1) {
+        pathName[count] = '\0';  // добавляем завершающий нуль
+        // используем dirname для извлечения директории из пути
+        dirname(pathName);
+    } else {
+        fprintf(stderr, "path to executable file (parent)");
+        exit(1);
+    }
+    if (strlen(pathName) + strlen("/child_exe") >= PATH_MAX - 1) {
+        fprintf(stderr, "path to executable file (parent)");
+        exit(1);
+    }
+    strcat(pathName, "/child_exe");
+
     if (dup2(sharedMemoryFD, STDIN_FILENO) == -1) {
         perror("dup2 stdin (child)");
         freeAllResources(semaphoreChild, semaphoreParent);
@@ -88,24 +107,22 @@ void createChildProcess(sem_t* semaphoreChild, sem_t* semaphoreParent, int share
         freeAllResources(semaphoreChild, semaphoreParent);
         exit(1);
     }
-    if (execl("./build/child_exe", "./build/child_exe", fileName, NULL) == -1) {
+    if (execl(pathName, pathName, fileName, NULL) == -1) {
         perror("exec error (child)");
         freeAllResources(semaphoreChild, semaphoreParent);
         exit(1);
     }
 }
 
-// TODO:
-// - Надо сделать, чтобы в независимости от запуска через бинарник или через make все работало одинаково
-// - создание SHM в функцию
+/* СРОСИТЬ:
 
-// СРОСИТЬ:
+ 1) У меня была ошибка, когда я файловый дескриптор передавал как простое числа в аргументы командной строки.
+ После, делал mmap и у меня был bad file descriptor, хотя число верное, я принтами проверил (в родителе и
+ ребенке одно и то же) Но, когда я просто сделал dup2 все стало работать хорошо.
 
-// 1) ПОЧЕМУ ЕСЛИ Я ПРОСТО ВТОРОЙ ФАЙЛОВЫЙ ДЕСКРИПТОР ПЕРЕДАВАЛ КАК ЧИСЛО И ДЕЛЛАЛ MMAP ПРОСТО С ЭТИМ ЧИСЛОМ У
-// МЕНЯ БЫЛО BAD FILE DESCRIPTOR, А ПОМЕНЯВ НА DUP2 ВСЕ ОК:???????
-
-// 2) не колхоз ли связать процессы для обработки ошибок еще одним shm???? (мб сделать сигналы????)
-// - сигналы мимо, я, кажется, никак не смогу нормально выйти из цикла или другие действия сделать.
+ 2) Чтобы пути не зависили от WD норм ли просто находить полный путь до бинарника и обрезать до папки, где он
+ лежит?
+*/
 
 int main() {
     // semParent должен останавливать/возобнавлять работу родителя
