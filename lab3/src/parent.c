@@ -248,6 +248,13 @@ int main() {
         memcpy(arrayInSharedMemory, arrayOfNumbers, sizeof(int) * numberOfNumbers);
         free(inputString);
         free(arrayOfNumbers);
+
+        if (munmap(arrayInSharedMemory, sizeof(int) * numberOfNumbers) == -1) {
+            perror("munmap (parent)");
+            freeAllResources(semaphoreChild, semaphoreParent);
+            exit(1);
+        }
+
         if (sem_post(semaphoreChild) == -1) {
             perror("sem_post (parent)");
             freeAllResources(semaphoreChild, semaphoreParent);
