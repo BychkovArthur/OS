@@ -5,10 +5,10 @@ INCLUDE=./include
 BUILD=./build
 
 build1: clean functions lib1
-	$(CC) $(FLAGS) $(SRC)/main1.c -o $(BUILD)/main_exe -L$(BUILD) -lFunctions -lMyLib1 -lm
+	$(CC) $(FLAGS) $(SRC)/compileTimeLinking1.c -o $(BUILD)/main_exe -L$(BUILD) -lFunctions -lMyLib1 -lm
 
 build2: clean functions lib2
-	$(CC) $(FLAGS) $(SRC)/main2.c -o $(BUILD)/main_exe -L$(BUILD) -lFunctions -lMyLib2 -lm
+	$(CC) $(FLAGS) $(SRC)/compileTimeLinking2.c -o $(BUILD)/main_exe -L$(BUILD) -lFunctions -lMyLib2 -lm
 
 run: $(BUILD)/main_exe
 	export LD_LIBRARY_PATH=$(BUILD)/; \
