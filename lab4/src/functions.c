@@ -97,19 +97,6 @@ int GCFNaive(int a, int b) {
         if (a % currentDivisior == 0 && b % currentDivisior == 0) {
             return currentDivisior;
         }
-    }    
+    }
+    return -1;
 }
-
-// int main() {
-//     float a, b, e;
-//     int c, d;
-
-//     scanf("%f%f%f", &a, &b, &e);
-//     scanf("%d%d", &c, &d);
-//     printf("Rectangle result: %f\n", SinIntegralRectangleMethod(a, b, e));
-
-//     printf("Trapezoid result: %f\n", SinIntegralTrapezoidMethod(a, b, e));
-
-//     printf("GCF naive = %d\n", GCFNaive(d, c));
-//     printf("GCF Euclid = %d\n", GCFNaive(c, d));
-// }

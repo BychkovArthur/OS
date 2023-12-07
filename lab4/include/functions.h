@@ -1,5 +1,5 @@
-#ifndef FUNCTIONS_H
-#define FUNCTIONS_H
+#ifndef __FUNCTIONS__
+#define __FUNCTIONS__
 
 void swapf(float*, float*);
 void swapi(int*, int*);
@@ -15,4 +15,4 @@ void isNumbersNatural(int, int);
 int GCFEuclid(int, int);
 int GCFNaive(int, int);
 
-#endif // FUNCTIONS_H
+#endif // __FUNCTIONS__
