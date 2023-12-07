@@ -7,7 +7,7 @@ enum OperationType {
     GCF_CALC,
 };
 
-void initRunTimeLibrary();
+void initRunTimeLibrary(void**, void**);
 void updateFuncions(void*, void*, float (**)(float, float, float), int (**)(int, int), int);
 
 void readOperationType(int*, const int);
