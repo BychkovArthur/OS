@@ -67,12 +67,12 @@ void updateFuncions(void* handleToLib1, void* handleToLib2, float (**SinIntegral
 
 void readOperationType(int* operationType, const int isRunTimeLinking) {
     if (isRunTimeLinking) {
-        printf(">>> Введите тип операции: (0) - Сменить текущую реализацию, (1) - Интеграл от синуса, (2) - Нахождение НОД:\n");
+        printf(">>> Введите тип операции: (0) - Сменить текущую реализацию, (1) - Интеграл от синуса, (2) - Нахождение НОД, (3) - Выход:\n");
     } else {
-        printf(">>> Введите тип операции: (1) - Интеграл от синуса, (2) - Нахождение НОД:\n");
+        printf(">>> Введите тип операции: (1) - Интеграл от синуса, (2) - Нахождение НОД, (3) - Выход:\n");
     }
     printf("> ");
-    if (scanf("%d", operationType) != 1 || !(*operationType >= SWITCH_IMPLEMENTATION && *operationType <= GCF_CALC)) {
+    if (scanf("%d", operationType) != 1 || !(*operationType >= SWITCH_IMPLEMENTATION && *operationType <= EXIT)) {
         fprintf(stderr, "Invalid number");
         exit(1);
     }

@@ -41,6 +41,8 @@ int main() {
             } else {
                 printf("НОД, вычисленный наивным алгоритмом равен: %d\n", GCF(a, b));
             }
+        } else if (operationType == EXIT) {
+            break;
         }
     }
     

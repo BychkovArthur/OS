@@ -5,6 +5,7 @@ enum OperationType {
     SWITCH_IMPLEMENTATION,
     SIN_INTEGRAL,
     GCF_CALC,
+    EXIT,
 };
 
 void initRunTimeLibrary(void**, void**);
