@@ -14,11 +14,5 @@ run: $(BUILD)/main_exe
 lib: $(SRC)/functions.c
 	$(CC) $(FALAGS) -o $(BUILD)/libFunction.so -shared -fPIC $(SRC)/functions.c
 
-functions.o: $(SRC)/functions.c
-	$(CC) $(FLAGS) -o $(BUILD)/functions.o -c $(SRC)/functions.c
-
-main.o: $(SRC)/main.c
-	$(CC) $(FLAGS) -o $(BUILD)/main.o -c $(SRC)/main.c
-
 clean:
 	rm -f $(BUILD)/*.o $(BUILD)/*.so $(BUILD)/*_exe
