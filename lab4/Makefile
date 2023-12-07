@@ -10,6 +10,9 @@ build1: clean functions lib1
 build2: clean functions lib2
 	$(CC) $(FLAGS) $(SRC)/compileTimeLinking2.c -o $(BUILD)/main_exe -L$(BUILD) -lFunctions -lMyLib2 -lm
 
+build3: clean functions lib1 lib2
+	$(CC) $(FLAGS) $(SRC)/runTimeLinking.c -o $(BUILD)/main_exe -L$(BUILD) -lFunctions -lm -ldl
+
 run: $(BUILD)/main_exe
 	export LD_LIBRARY_PATH=$(BUILD)/; \
 	$(BUILD)/main_exe

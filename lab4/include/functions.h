@@ -2,11 +2,15 @@
 #define __FUNCTIONS__
 
 enum OperationType {
-    SIN_INTEGRAL = 1,
+    SWITCH_IMPLEMENTATION,
+    SIN_INTEGRAL,
     GCF_CALC,
 };
 
-void readOperationType(int*);
+void initRunTimeLibrary();
+void updateFuncions(void*, void*, float (**)(float, float, float), int (**)(int, int), int);
+
+void readOperationType(int*, const int);
 void readFloatValue(const char*, float*);
 void readIntValue(const char*, int*);
 

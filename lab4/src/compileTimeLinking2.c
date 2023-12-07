@@ -4,9 +4,15 @@
 #include "../include/functions.h"
 
 int main() {
+    const int isRunTimeLinking = 0;
     int operationType = 0;
     
-    readOperationType(&operationType);
+    readOperationType(&operationType, isRunTimeLinking);
+
+    if (operationType == SWITCH_IMPLEMENTATION) {
+        fprintf(stderr, "Invalid number");
+        exit(1);
+    }
 
     if (operationType == SIN_INTEGRAL) {
         float A, B, e;
