@@ -47,4 +47,15 @@ int main() {
     // printf("%d\n", isBlockFree((BlockInfo*)(alloc1 - ALIGN_BY)));
     // printf("%d\n", isBlockFree((BlockInfo*)(alloc2 - ALIGN_BY)));
     // printf("%d\n", isBlockFree((BlockInfo*)(alloc3 - ALIGN_BY)));
+
+    void* alloc4 = allocBlock(allocator, 25);
+    
+    void* alloc5 = allocBlock(allocator, 65);
+    printf("\n\n\n\n");
+    printf("Начало памяти       : %ld\nНачало первого блока: %ld\nНачало второго блока: %ld\n", allocator->memory, alloc4 - allocator->memory, alloc5 - allocator->memory);
+    printf("Размер первого блока: %zu\n", getBlockLengthByGivenMemory(allocator, alloc4));
+    printf("Размер второго блока: %zu\n", getBlockLengthByGivenMemory(allocator, alloc5));
+    printf("Последний блок: %p", ((BlockInfo*)(alloc5 - ALIGN_BY))->nextBlock);
+    printf("Последний блок: %p", ((BlockInfo*)(alloc5 - ALIGN_BY))->nextBlock);
+    // void* alloc3 = allocBlock(allocator, 33);
 }
