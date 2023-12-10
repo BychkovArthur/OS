@@ -4,14 +4,14 @@
 #include <stdio.h>
 #include <stdint.h>
 
-// void printBinary(size_t num) {
-//     int bits = sizeof(size_t) * 8; // Количество бит в int
-//     for (int i = bits - 1; i >= 0; i--) {
-//         int bit = (num >> i) & 1;
-//         printf("%d", bit);
-//     }
-//     printf("\n");
-// }
+void printBinary(size_t num) {
+    int bits = sizeof(size_t) * 8; // Количество бит в int
+    for (int i = bits - 1; i >= 0; i--) {
+        int bit = (num >> i) & 1;
+        printf("%d", bit);
+    }
+    printf("\n");
+}
 
 int main() {
     size_t d;

@@ -24,7 +24,6 @@ Allocator* createMemoryAllocator(size_t memorySize) {
     // Добавляем размер структуры
     memorySize += ALIGN_BY;
     memorySize = align(memorySize); // Выравниваем саму память
-    printf("MEMORY SIZE: %zu\n", memorySize);
     uint8_t* memory = malloc(memorySize); // malloc выравнивает память по 8 (или 16 или 32...)
     if (memory == NULL) {
         fprintf(stderr, "Can't allocate memory\n");
@@ -89,7 +88,6 @@ void* allocBlock(Allocator* allocator, size_t blockSize) {
     } else {
         bestBlock->nextBlock = setBlockOccupied(bestBlock);
     }
-    printf("SLAVA UKRAINE %d\n", isBlockFree(bestBlock));
     return (void*)(((uint8_t*)bestBlock) + ALIGN_BY);
 }
 
@@ -99,10 +97,7 @@ void freeBlock(Allocator* allocator, void* memoryBlock) {
         fprintf(stderr, "Can't free this block\n");
         exit(1);
     }
-    printf("privetik %ld\n", ((void*)(currentBlock->nextBlock) - allocator->memory));
-    printf("privetik2 %ld\n", ((void*)(currentBlock->nextBlock)));
     currentBlock->nextBlock = setBlockFree(currentBlock);
-    printf("HERE\n\n");
     concatenateBlocks(allocator);
 }
 
@@ -110,10 +105,7 @@ void concatenateBlocks(Allocator* allocator) {
     BlockInfo* currentBlock = (BlockInfo*)allocator->memory;
 
     while (currentBlock != NULL && resetToNormalPointer(currentBlock->nextBlock) != NULL) {
-        // printf("iteration %zu\n", (void*) currentBlock - (void*) allocator->memory);
-        // printf("Текущий блок свободен: %d\nСледующий блок свободен: %d\n", isBlockFree(currentBlock), isBlockFree(resetToNormalPointer(currentBlock->nextBlock)));
         if (isBlockFree(currentBlock) && isBlockFree(resetToNormalPointer(currentBlock->nextBlock))) {
-            printf("КОНКАТЕНАЦИЯ!!!!");
             currentBlock->nextBlock = resetToNormalPointer(currentBlock->nextBlock)->nextBlock;
         }
         currentBlock = resetToNormalPointer(currentBlock->nextBlock);
