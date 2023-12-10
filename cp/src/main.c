@@ -26,7 +26,7 @@ int main() {
     void* alloc1 = allocBlock(allocator, 10);
     
     void* alloc2 = allocBlock(allocator, 30);
-    void* alloc3 = allocBlock(allocator, 16);
+    void* alloc3 = allocBlock(allocator, 40);
     printf("Начало памяти       : %ld\nНачало первого блока: %ld\nНачало второго блока: %ld\n", allocator->memory, alloc1 - allocator->memory, alloc2 - allocator->memory);
     printf("Размер первого блока: %zu\n", getBlockLengthByGivenMemory(allocator, alloc1));
     printf("Размер второго блока: %zu\n", getBlockLengthByGivenMemory(allocator, alloc2));
@@ -34,6 +34,7 @@ int main() {
     printf("Размер третьего блока: %zu\n", getBlockLengthByGivenMemory(allocator, (void*)((uint8_t*)alloc2 + 40)));
     printf("HERE %ld\n", (alloc2 + 32) - allocator->memory);
     printf("ptr: %p\n", ((BlockInfo*)(alloc2 + 32))->nextBlock);
+    printf("Размер 4-го блока: %ld", getBlockLengthByGivenMemory(allocator, alloc3 + 40));
     // BlockInfo block = {
     //     NULL,
     // };

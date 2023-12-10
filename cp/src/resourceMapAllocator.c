@@ -48,7 +48,6 @@ Allocator* createMemoryAllocator(size_t memorySize) {
 size_t getBlockLengthByBlock(Allocator* allocator, BlockInfo* blockInfo) {
     BlockInfo* nextBlock = resetToNormalPointer(blockInfo->nextBlock);
     if (nextBlock == NULL) {
-        printf("%ld\n\n\n", blockInfo->nextBlock);
         return allocator->memorySize - ((uint8_t*)blockInfo - (uint8_t*)allocator->memory) - ALIGN_BY;
     }
     return ((uint8_t*)nextBlock - (uint8_t*)blockInfo) - ALIGN_BY;
@@ -60,7 +59,7 @@ size_t getBlockLengthByGivenMemory(Allocator* allocator, void* memory) {
 
 void* allocBlock(Allocator* allocator, size_t blockSize) {
 
-    blockSize += ALIGN_BY;
+    // blockSize += ALIGN_BY;
     blockSize = align(blockSize);
     BlockInfo* currentBlock = (BlockInfo*)allocator->memory;
     BlockInfo* bestBlock = NULL;
@@ -80,11 +79,19 @@ void* allocBlock(Allocator* allocator, size_t blockSize) {
         exit(1);
     }
 
-    BlockInfo* newBlock = (BlockInfo*)((uint8_t*)bestBlock + blockSize);
-    newBlock->nextBlock = resetToNormalPointer(bestBlock->nextBlock);
-    newBlock->nextBlock = setBlockFree(newBlock->nextBlock);
-    bestBlock->nextBlock = setBlockOccupied(newBlock);
+    // Если можно расположить следующий пункт информации, делаем
+    if (getBlockLengthByBlock(allocator, bestBlock) >= blockSize + ALIGN_BY) {
+        blockSize += ALIGN_BY;
+        BlockInfo* newBlock = (BlockInfo*)((uint8_t*)bestBlock + blockSize);
+        newBlock->nextBlock = resetToNormalPointer(bestBlock->nextBlock);
+        newBlock->nextBlock = setBlockFree(newBlock->nextBlock);
+        bestBlock->nextBlock = setBlockOccupied(newBlock);
+    } else {
+        bestBlock->nextBlock = setBlockOccupied(bestBlock->nextBlock);
+    }
     return (void*)(((uint8_t*)bestBlock) + ALIGN_BY);
 }
 
-void* freeBlock(Allocator* allocator, void* block);
+void* freeBlock(Allocator* allocator, void* memoryBlock) {
+
+}

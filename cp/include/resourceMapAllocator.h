@@ -14,9 +14,10 @@ typedef struct _Allocator {
 
 size_t align(size_t);
 
-Allocator* createMemoryAllocator(size_t memorySize);
-void* allocBlock(Allocator* allocator, size_t blockSize);
-void* freeBlock(Allocator* allocator, void* block);
-size_t getBlockLength(Allocator*, BlockInfo* block);
+Allocator* createMemoryAllocator(size_t);
+void* allocBlock(Allocator*, size_t);
+void* freeBlock(Allocator*, void*);
+size_t getBlockLengthByBlock(Allocator*, BlockInfo*);
+size_t getBlockLengthByGivenMemory(Allocator*, void*);
 
 #endif // __RESOURCE_MAP_ALLOCATOR__
