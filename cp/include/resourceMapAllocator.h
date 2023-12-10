@@ -16,8 +16,9 @@ size_t align(size_t);
 
 Allocator* createMemoryAllocator(size_t);
 void* allocBlock(Allocator*, size_t);
-void* freeBlock(Allocator*, void*);
+void freeBlock(Allocator*, void*);
 size_t getBlockLengthByBlock(Allocator*, BlockInfo*);
 size_t getBlockLengthByGivenMemory(Allocator*, void*);
+void concatenateBlocks(Allocator*);
 
 #endif // __RESOURCE_MAP_ALLOCATOR__

@@ -41,7 +41,7 @@ Allocator* createMemoryAllocator(size_t memorySize) {
     BlockInfo* firstBlock = (BlockInfo*)allocator->memory;
     *firstBlock = block;
 
-    firstBlock->nextBlock = setBlockFree(firstBlock->nextBlock);
+    firstBlock->nextBlock = setBlockFree(firstBlock);
     return allocator;
 }
 
@@ -59,7 +59,6 @@ size_t getBlockLengthByGivenMemory(Allocator* allocator, void* memory) {
 
 void* allocBlock(Allocator* allocator, size_t blockSize) {
 
-    // blockSize += ALIGN_BY;
     blockSize = align(blockSize);
     BlockInfo* currentBlock = (BlockInfo*)allocator->memory;
     BlockInfo* bestBlock = NULL;
@@ -67,7 +66,7 @@ void* allocBlock(Allocator* allocator, size_t blockSize) {
 
     while (currentBlock != NULL) {
         size_t currentBlockLength = getBlockLengthByBlock(allocator, currentBlock);
-        if (isBlockFree(currentBlock->nextBlock) && currentBlockLength >= blockSize && currentBlockLength < minLength) {
+        if (isBlockFree(currentBlock) && currentBlockLength >= blockSize && currentBlockLength < minLength) {
             bestBlock = currentBlock;
             minLength = currentBlockLength;
         }
@@ -79,19 +78,45 @@ void* allocBlock(Allocator* allocator, size_t blockSize) {
         exit(1);
     }
 
-    // Если можно расположить следующий пункт информации, делаем
+    // Если можно расположить следующий blockInfo, делаем
     if (getBlockLengthByBlock(allocator, bestBlock) >= blockSize + ALIGN_BY) {
         blockSize += ALIGN_BY;
         BlockInfo* newBlock = (BlockInfo*)((uint8_t*)bestBlock + blockSize);
         newBlock->nextBlock = resetToNormalPointer(bestBlock->nextBlock);
-        newBlock->nextBlock = setBlockFree(newBlock->nextBlock);
-        bestBlock->nextBlock = setBlockOccupied(newBlock);
+        newBlock->nextBlock = setBlockFree(newBlock);
+        bestBlock->nextBlock = newBlock;
+        bestBlock->nextBlock = setBlockOccupied(bestBlock);
     } else {
-        bestBlock->nextBlock = setBlockOccupied(bestBlock->nextBlock);
+        bestBlock->nextBlock = setBlockOccupied(bestBlock);
     }
+    printf("SLAVA UKRAINE %d\n", isBlockFree(bestBlock));
     return (void*)(((uint8_t*)bestBlock) + ALIGN_BY);
 }
 
-void* freeBlock(Allocator* allocator, void* memoryBlock) {
+void freeBlock(Allocator* allocator, void* memoryBlock) {
+    BlockInfo* currentBlock = (BlockInfo*)((uint8_t*)memoryBlock - ALIGN_BY);
+    if (!(allocator->memory <= memoryBlock && memoryBlock <= (allocator->memory + allocator->memorySize)) || isBlockFree(currentBlock)) {
+        fprintf(stderr, "Can't free this block\n");
+        exit(1);
+    }
+    printf("privetik %ld\n", ((void*)(currentBlock->nextBlock) - allocator->memory));
+    printf("privetik2 %ld\n", ((void*)(currentBlock->nextBlock)));
+    currentBlock->nextBlock = setBlockFree(currentBlock);
+    printf("HERE\n\n");
+    concatenateBlocks(allocator);
+}
 
+void concatenateBlocks(Allocator* allocator) {
+    BlockInfo* currentBlock = (BlockInfo*)allocator->memory;
+
+    while (currentBlock != NULL && resetToNormalPointer(currentBlock->nextBlock) != NULL) {
+        // printf("iteration %zu\n", (void*) currentBlock - (void*) allocator->memory);
+        // printf("Текущий блок свободен: %d\nСледующий блок свободен: %d\n", isBlockFree(currentBlock), isBlockFree(resetToNormalPointer(currentBlock->nextBlock)));
+        if (isBlockFree(currentBlock) && isBlockFree(resetToNormalPointer(currentBlock->nextBlock))) {
+            printf("КОНКАТЕНАЦИЯ!!!!");
+            currentBlock->nextBlock = resetToNormalPointer(currentBlock->nextBlock)->nextBlock;
+        }
+        currentBlock = resetToNormalPointer(currentBlock->nextBlock);
+    }
+    
 }
