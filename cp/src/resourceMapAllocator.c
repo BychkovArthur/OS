@@ -107,8 +107,8 @@ void concatenateBlocks(Allocator* allocator) {
     while (currentBlock != NULL && resetToNormalPointer(currentBlock->nextBlock) != NULL) {
         if (isBlockFree(currentBlock) && isBlockFree(resetToNormalPointer(currentBlock->nextBlock))) {
             currentBlock->nextBlock = resetToNormalPointer(currentBlock->nextBlock)->nextBlock;
+        } else {
+            currentBlock = resetToNormalPointer(currentBlock->nextBlock);
         }
-        currentBlock = resetToNormalPointer(currentBlock->nextBlock);
     }
-    
 }

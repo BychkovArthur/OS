@@ -38,17 +38,19 @@ int main() {
     printf("Размер 4-го блока: %ld", getBlockLengthByGivenMemory(allocator, alloc3 + 40));
     printf("\n\n\n");
 
+    // allocBlock(allocator, 5);
+
+    freeBlock(allocator, alloc3);
+    printf("Длина всего3: %zu\n", getBlockLengthByBlock(allocator, (BlockInfo*)allocator->memory));
     freeBlock(allocator, alloc1);
     printf("Длина всего1: %zu\n", getBlockLengthByBlock(allocator, (BlockInfo*)allocator->memory));
     freeBlock(allocator, alloc2);
     printf("Длина всего2: %zu\n", getBlockLengthByBlock(allocator, (BlockInfo*)allocator->memory));
-    freeBlock(allocator, alloc3);
-    printf("Длина всего3: %zu\n", getBlockLengthByBlock(allocator, (BlockInfo*)allocator->memory));
     // printf("%d\n", isBlockFree((BlockInfo*)(alloc1 - ALIGN_BY)));
     // printf("%d\n", isBlockFree((BlockInfo*)(alloc2 - ALIGN_BY)));
     // printf("%d\n", isBlockFree((BlockInfo*)(alloc3 - ALIGN_BY)));
 
-    void* alloc4 = allocBlock(allocator, 25);
+    void* alloc4 = allocBlock(allocator, 24);
     
     void* alloc5 = allocBlock(allocator, 65);
     printf("\n\n\n\n");
