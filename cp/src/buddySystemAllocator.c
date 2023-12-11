@@ -187,93 +187,38 @@ void freeBlock(const Allocator* allocator, void* block) {
 }
 
 void concatenateBlocks(const Allocator* allocator, BlockInfo* currentBlock) {
-    size_t whereIsBuddy = getSideWithBuddy(allocator, currentBlock);
-    if (whereIsBuddy == 0) {
-        fprintf(stderr, "Something went wrong..");
-        exit(1);
-    }
+    BlockInfo* buddy = getBuddy(allocator, currentBlock);
+
+    printf("Current: %zu, buddy %zu\n", (uint8_t*)currentBlock - (uint8_t*)allocator->memory, (uint8_t*)buddy - (uint8_t*)allocator->memory);
+
     printf("HERE\n\n\n");
     size_t blockID = getPowerOf2(currentBlock->size) - MIN_POWER_OF_TWO;
-    if (whereIsBuddy == 1) {
+    if (currentBlock < buddy) {
         printf("Start concatenate (1), blockID = %zu\n", blockID);
-        BlockInfo* buddy = (BlockInfo*)((uint8_t*)currentBlock + currentBlock->size);
-        if (buddy->isFree) {
+        // BlockInfo* buddy = (BlockInfo*)((uint8_t*)currentBlock + currentBlock->size);
+        if (buddy->isFree && buddy->size == currentBlock->size) {
             removeBlock(&blocks[blockID], buddy);
             currentBlock->size *= 2;
             concatenateBlocks(allocator, currentBlock);
         } else {
             push(&blocks[blockID], currentBlock);
         }
-    } else if (whereIsBuddy == -1) {
+    } else if (currentBlock > buddy) {
         printf("Start concatenate (-1), blockID = %zu\n", blockID);
-        BlockInfo* buddy = (BlockInfo*)((uint8_t*)currentBlock - currentBlock->size);
-        if (buddy->isFree) {
+        // BlockInfo* buddy = (BlockInfo*)((uint8_t*)currentBlock - currentBlock->size);
+        if (buddy->isFree && buddy->size == currentBlock->size) {
             removeBlock(&blocks[blockID], buddy);
             buddy->size *= 2;
             concatenateBlocks(allocator, buddy);
         } else {
             push(&blocks[blockID], currentBlock);
         }
-    }
-}
-
-void printBinary(size_t num) {
-    int bits = sizeof(size_t) * 8; // Количество бит в int
-    for (int i = bits - 1; i >= 0; i--) {
-        int bit = (num >> i) & 1;
-        printf("%d", bit);
-    }
-    printf("\n");
-}
-
-int64_t getSideWithBuddy(const Allocator* allocator, BlockInfo* currentBlock) {
-    // Что здесь происходит, почему знаки надо наоборот???
-
-    // printf("regular: "); printBinary((size_t)currentBlock);
-    // printf("-:       "); printBinary((size_t)currentBlock - currentBlock->size);
-    // printf("XOR - :  "); printBinary(((size_t)currentBlock) ^ ((size_t)currentBlock - (size_t)currentBlock->size));
-    // printf("          %zu\n", ((size_t)currentBlock) ^ ((size_t)currentBlock - currentBlock->size));
-    // printf("regular: "); printBinary((size_t)currentBlock);
-    // printf("+:       "); printBinary((size_t)currentBlock + currentBlock->size);
-    // printf("XOR + :  "); printBinary(((size_t)currentBlock) ^ ((size_t)currentBlock + currentBlock->size));
-    // printf("          %zu\n", ((size_t)currentBlock) ^ (((size_t)currentBlock) + currentBlock->size));
-    // printf("\n\n\n\n");
-    // printf("binary block size: "); printBinary(currentBlock->size);
-    // printf("xor with size: %zu ", currentBlock ^ currentBlock->size); printBinary((size_t)currentBlock ^ currentBlock->size);
-
-    // printf("regular: "); printBinary((size_t)currentBlock);
-    // printf("-:       "); printBinary((size_t)((uint8_t*)currentBlock - currentBlock->size));
-    // printf("XOR - :  "); printBinary(((size_t)currentBlock) ^ ((size_t)((uint8_t*)currentBlock - currentBlock->size)));
-    // printf("          %zu\n", ((size_t)currentBlock) ^ ((size_t)currentBlock - currentBlock->size));
-    // printf("regular: "); printBinary((size_t)currentBlock);
-    // printf("+:       "); printBinary((size_t)((uint8_t*)currentBlock + currentBlock->size));
-    // printf("XOR + :  "); printBinary(((size_t)currentBlock) ^ ((size_t)((uint8_t*)currentBlock + currentBlock->size)));
-    // printf("          %zu\n", ((size_t)currentBlock) ^ (((size_t)currentBlock) + currentBlock->size));
-    // printf("\n\n\n\n");
-    // printf("xor with size: "); printBinary((size_t)currentBlock ^ currentBlock->size);
-
-    // if (currentBlock->size == 256) return 1;
-    printBinary(((size_t)((uint8_t*)currentBlock - (uint8_t*)allocator->memory)));
-    printBinary(currentBlock->size);
-    printBinary((((size_t)((uint8_t*)currentBlock - (uint8_t*)allocator->memory)) ^ ((size_t)currentBlock->size)));
-    printf("Buddy address = %zu\n", (((size_t)((uint8_t*)currentBlock - (uint8_t*)allocator->memory)) ^ ((size_t)currentBlock->size)));
-
-    if ((((size_t)currentBlock) ^ ((size_t)currentBlock + currentBlock->size)) == currentBlock->size) {
-        // printf("HERE1\n");
-        return -1;
-
-
-
-
-// Если данные выравнены по 2^n байт, то гарантируется, что адрес левого близнеца в двоичном представлении будет иметь n нулей в младших разрядах
-
-
-
-
-    } else if ((((size_t)currentBlock) ^ ((size_t)currentBlock - currentBlock->size)) == currentBlock->size) {
-        // printf("HERE2\n");
-        return 1;
     } else {
-        return 0;
+        fprintf(stderr, "Something went wrong ...\n");
+        exit(1);
     }
+}
+
+BlockInfo* getBuddy(const Allocator* allocator, BlockInfo* currentBlock) {
+    return (BlockInfo*)((uint8_t*)allocator->memory + (((size_t)(((uint8_t*)currentBlock) - ((uint8_t*)allocator->memory))) ^ ((size_t)currentBlock->size)));
 }

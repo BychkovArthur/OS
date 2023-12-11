@@ -13,13 +13,15 @@ typedef struct _BlockInfo {
     uint32_t size;
     uint32_t isFree;
     struct _BlockInfo* next;
-    struct _BlockInfo* prev;
+    // struct _BlockInfo* prev;
 } BlockInfo;
 
 typedef struct _Allocator {
     void* memory;
     size_t memorySize;
 } Allocator;
+
+void printBlocks(Allocator*);
 
 size_t align(size_t);
 size_t getPowerOf2(size_t);
@@ -30,6 +32,7 @@ Allocator* createMemoryAllocator(size_t);
 void* allocBlock(Allocator*, size_t);
 void* recursiveAlloc(Allocator*, size_t, size_t, size_t);
 void freeBlock(const Allocator*, void*);
-
+BlockInfo* getBuddy(const Allocator*, BlockInfo*);
+void concatenateBlocks(const Allocator*, BlockInfo*);
 
 #endif // __BUDDY_SYSTEM_ALLOCATOR__

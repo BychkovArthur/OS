@@ -5,5 +5,6 @@
 
 void push(BlockInfo**, BlockInfo*);
 BlockInfo* pop(BlockInfo**);
+void removeBlock(BlockInfo**, BlockInfo*);
 
 #endif // __LINKED_LIST__

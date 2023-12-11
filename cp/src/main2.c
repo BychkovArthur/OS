@@ -39,15 +39,15 @@ int main() {
 
 
     freeBlock(allocator, m2);
-    // freeBlock(allocator, m3);
-    // freeBlock(allocator, m7);
+    freeBlock(allocator, m3);
+    freeBlock(allocator, m7);
     printBlocks(allocator);
 
-    // void* m10 = allocBlock(allocator, 128 - 24);
-    // printf("HERE10 %zu\n", m10 - allocator->memory);
-    // freeBlock(allocator, m10);
-    // freeBlock(allocator, m8);
-    // freeBlock(allocator, m1);
+    void* m10 = allocBlock(allocator, 128 - 24);
+    printf("HERE10 %zu\n", m10 - allocator->memory);
+    freeBlock(allocator, m10);
+    freeBlock(allocator, m8);
+    freeBlock(allocator, m1);
     freeBlock(allocator, m4);
     printBlocks(allocator);
 }
