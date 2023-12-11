@@ -13,6 +13,7 @@ size_t align(size_t memorySize) {
 Allocator* createMemoryAllocator(size_t memorySize) {
     if (memorySize == 0) {
         fprintf(stderr, "Invalid memory size 0\n");
+        exit(1);
     }
 
     Allocator* allocator = malloc(sizeof(Allocator));
