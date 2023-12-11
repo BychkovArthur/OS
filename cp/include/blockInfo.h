@@ -13,4 +13,7 @@ BlockInfo* setBlockFree(BlockInfo*);
 BlockInfo* setBlockOccupied(BlockInfo*);
 BlockInfo* resetToNormalPointer(BlockInfo*);
 
+bool adjacentBlocksExistsAndFree(BlockInfo*);
+bool currentBlockBetter(BlockInfo*, size_t, size_t, size_t);
+
 #endif // __BLOCK_INFO__

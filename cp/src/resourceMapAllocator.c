@@ -64,8 +64,14 @@ void* allocBlock(Allocator* allocator, size_t blockSize) {
     size_t minLength = -1;
 
     while (currentBlock != NULL) {
+        // Если можно объединить, объединяем
+        // Но, чтобы обработать ситуацию когда 3 и более подряд пустых, мы после склеивания не должны менять текущий.
+        if (adjacentBlocksExistsAndFree(currentBlock)) {
+            currentBlock->nextBlock = resetToNormalPointer(currentBlock->nextBlock)->nextBlock;
+            continue;
+        }
         size_t currentBlockLength = getBlockLengthByBlock(allocator, currentBlock);
-        if (isBlockFree(currentBlock) && currentBlockLength >= blockSize && currentBlockLength < minLength) {
+        if (currentBlockBetter(currentBlock, currentBlockLength, blockSize, minLength)) {
             bestBlock = currentBlock;
             minLength = currentBlockLength;
         }
@@ -98,17 +104,12 @@ void freeBlock(Allocator* allocator, void* memoryBlock) {
         exit(1);
     }
     currentBlock->nextBlock = setBlockFree(currentBlock);
-    concatenateBlocks(allocator);
 }
 
-void concatenateBlocks(Allocator* allocator) {
-    BlockInfo* currentBlock = (BlockInfo*)allocator->memory;
+bool adjacentBlocksExistsAndFree(BlockInfo* currentBlock) {
+    return resetToNormalPointer(currentBlock->nextBlock) != NULL && isBlockFree(currentBlock) && isBlockFree(resetToNormalPointer(currentBlock->nextBlock));
+}
 
-    while (currentBlock != NULL && resetToNormalPointer(currentBlock->nextBlock) != NULL) {
-        if (isBlockFree(currentBlock) && isBlockFree(resetToNormalPointer(currentBlock->nextBlock))) {
-            currentBlock->nextBlock = resetToNormalPointer(currentBlock->nextBlock)->nextBlock;
-        } else {
-            currentBlock = resetToNormalPointer(currentBlock->nextBlock);
-        }
-    }
+bool currentBlockBetter(BlockInfo* currentBlock, size_t currentBlockLength, size_t blockSize, size_t minLength) {
+    return isBlockFree(currentBlock) && currentBlockLength >= blockSize && currentBlockLength < minLength;
 }
