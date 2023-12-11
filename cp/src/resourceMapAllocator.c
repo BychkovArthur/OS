@@ -97,9 +97,9 @@ void* allocBlock(Allocator* allocator, size_t blockSize) {
     return (void*)(((uint8_t*)bestBlock) + ALIGN_BY);
 }
 
-void freeBlock(Allocator* allocator, void* memoryBlock) {
+void freeBlock(const Allocator* allocator, void* memoryBlock) {
     BlockInfo* currentBlock = (BlockInfo*)((uint8_t*)memoryBlock - ALIGN_BY);
-    if (!(allocator->memory <= memoryBlock && memoryBlock <= (allocator->memory + allocator->memorySize)) || isBlockFree(currentBlock)) {
+    if (!(allocator->memory <= memoryBlock && memoryBlock <= (void*)((uint8_t*)allocator->memory + allocator->memorySize)) || isBlockFree(currentBlock)) {
         fprintf(stderr, "Can't free this block\n");
         exit(1);
     }
