@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include "../include/linkedList.h"
+#include "../include/buddySystemLinkedList.h"
 
 // TODO:
 // - Проверка на уничтожение верного блока
@@ -15,7 +15,7 @@ void printBlocks(Allocator* allocator) {
     for (int i = 0; i < 10; ++i) {
         printf("I = %d\n", i);
         BlockInfo* currBlock = blocks[i];
-        printf("Block size = %zu\n", currBlock ? currBlock->size : 0);
+        printf("Block size = %u\n", currBlock ? currBlock->size : 0);
         while (currBlock != NULL) {
             printf(" (%zu) ", (uint8_t*)currBlock - (uint8_t*)allocator->memory);
             currBlock = currBlock->next;
@@ -65,10 +65,6 @@ Allocator* createMemoryAllocator(size_t memorySize) {
     memorySize = align(memorySize); // Выравниваем саму память
     // Добавляем размер структуры
 
-    printf("Memory allocated: %zu\n", memorySize);
-    printf("Power of 2: %zu\n", getPowerOf2(memorySize));
-    printf("Align BY = %u\n", sizeof(BlockInfo));
-
     uint8_t* memory = malloc(memorySize); // malloc выравнивает память по 8 (или 16 или 32...)
     if (memory == NULL) {
         fprintf(stderr, "Can't allocate memory\n");
@@ -112,7 +108,7 @@ void* allocBlock(Allocator* allocator, size_t blockSize) {
         }
     }
 
-    if (firstGoodBlockID == -1) {
+    if (firstGoodBlockID == (size_t)-1) {
         fprintf(stderr, "Can't allocate memory\n");
         exit(1);
     }

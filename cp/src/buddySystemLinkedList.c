@@ -1,4 +1,4 @@
-#include "../include/linkedList.h"
+#include "../include/buddySystemLinkedList.h"
 
 void push(BlockInfo** head, BlockInfo* new) {
     new->next = *head;
