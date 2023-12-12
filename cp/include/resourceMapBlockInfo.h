@@ -6,6 +6,7 @@
 
 typedef struct _BlockInfo {
     struct _BlockInfo* nextBlock;
+    size_t blockSize;
 } BlockInfo;
 
 bool isBlockFree(BlockInfo*);
