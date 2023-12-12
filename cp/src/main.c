@@ -35,7 +35,8 @@ int main() {
     printf("Размер третьего блока: %zu\n", getBlockLengthByGivenMemory(allocator, (void*)((uint8_t*)alloc2 + 40)));
     printf("HERE %ld\n", (alloc2 + 32) - allocator->memory);
     printf("ptr: %p\n", ((BlockInfo*)(alloc2 + 32))->nextBlock);
-    printf("Размер 4-го блока: %ld", getBlockLengthByGivenMemory(allocator, alloc3 + 40));
+    printf("Начало 3-го блока :%zu\nНачало 4-го блока %zu\n", alloc3 - allocator->memory, alloc3 - allocator->memory);
+    printf("Размер 4-го блока: %ld", getBlockLengthByGivenMemory(allocator, alloc3 + 48));
     printf("\n\n\n");
 
     // allocBlock(allocator, 5);
