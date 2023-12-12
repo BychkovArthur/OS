@@ -44,21 +44,11 @@ Allocator* createMemoryAllocator(size_t memorySize) {
     *firstBlock = block;
 
     firstBlock->nextBlock = setBlockFree(firstBlock);
-    printf("Total allocated: %zu\n", memorySize);
-    printf("IN START %p\n", firstBlock->nextBlock);
     allocator->firstFreeBLock = firstBlock;
     return allocator;
 }
 
-// size_t getBlockLengthByBlock(Allocator* allocator, BlockInfo* blockInfo) {
-//     BlockInfo* nextBlock = resetToNormalPointer(blockInfo->nextBlock);
-//     if (nextBlock == NULL) {
-//         return allocator->memorySize - ((uint8_t*)blockInfo - (uint8_t*)allocator->memory) - ALIGN_BY;
-//     }
-//     return ((uint8_t*)nextBlock - (uint8_t*)blockInfo) - ALIGN_BY;
-// }
-
-size_t getBlockLengthByGivenMemory(Allocator* allocator, void* memory) {
+size_t getBlockLengthByGivenMemory(void* memory) {
     return ((BlockInfo*)((uint8_t*)memory - ALIGN_BY))->blockSize;
 }
 
@@ -70,27 +60,15 @@ size_t getOffset(Allocator* allocator, BlockInfo* block) {
 void* allocBlock(Allocator* allocator, size_t blockSize) {
     blockSize = align(blockSize);
     BlockInfo* currentBlock = allocator->firstFreeBLock;
-    printf("%p------------------------\n", currentBlock);
-    // printf("228 : IN START %p\n", currentBlock->nextBlock);
     BlockInfo* prevBlock = NULL;
     BlockInfo* bestBlock = NULL;
     BlockInfo* bestPrevBlock = NULL;
     size_t minLength = -1;
     
     while (currentBlock != NULL) {
-        printf("offset: %zu size %zu nextOffset: %p\n", getOffset(allocator, currentBlock), currentBlock->blockSize, currentBlock->nextBlock);
-        // Если можно объединить, объединяем
-        // Но, чтобы обработать ситуацию когда 3 и более подряд пустых, мы после склеивания не должны менять текущий.
-        if (adjacentBlocksExistsAndFree(currentBlock)) {
-            currentBlock->blockSize += (ALIGN_BY + resetToNormalPointer(currentBlock->nextBlock)->blockSize);
-            currentBlock->nextBlock = resetToNormalPointer(currentBlock->nextBlock)->nextBlock;
-            continue;
-        }
-        // size_t currentBlockLength = getBlockLengthByBlock(allocator, currentBlock);
+        
         size_t currentBlockLength = currentBlock->blockSize;
-        printf("SIZE = %zu\n", currentBlockLength);
         if (currentBlockBetter(currentBlock, currentBlockLength, blockSize, minLength)) {
-            printf("HERE-----------------\n");
             bestPrevBlock = prevBlock;
             bestBlock = currentBlock;
             minLength = currentBlockLength;
@@ -105,8 +83,7 @@ void* allocBlock(Allocator* allocator, size_t blockSize) {
     }
     
     if (bestBlock == allocator->firstFreeBLock) {
-        // allocator->firstFreeBLock = bestBlock->nextBlock;
-        
+
         if (bestBlock->blockSize >= blockSize + ALIGN_BY) {
             blockSize += ALIGN_BY;
             BlockInfo* newBlock = (BlockInfo*)((uint8_t*)bestBlock + blockSize);
@@ -116,7 +93,6 @@ void* allocBlock(Allocator* allocator, size_t blockSize) {
 
             newBlock->blockSize = bestBlock->blockSize - blockSize;
 
-            // bestBlock->nextBlock = newBlock; // Вот это под вопросом
             bestBlock->nextBlock = setBlockOccupied(bestBlock);
             bestBlock->blockSize = blockSize - ALIGN_BY;
 
@@ -137,8 +113,6 @@ void* allocBlock(Allocator* allocator, size_t blockSize) {
             newBlock->nextBlock = resetToNormalPointer(bestBlock->nextBlock);
             newBlock->nextBlock = setBlockFree(newBlock);
 
-            
-            // bestBlock->nextBlock = newBlock; // Вот это под вопросом
             bestBlock->nextBlock = setBlockOccupied(bestBlock);
             bestBlock->blockSize = blockSize - ALIGN_BY;
 
@@ -150,22 +124,6 @@ void* allocBlock(Allocator* allocator, size_t blockSize) {
         }
     }
 
-
-
-
-    // Если можно расположить следующий blockInfo, делаем
-    // if (getBlockLengthByBlock(allocator, bestBlock) >= blockSize + ALIGN_BY) {
-    //     blockSize += ALIGN_BY;
-    //     BlockInfo* newBlock = (BlockInfo*)((uint8_t*)bestBlock + blockSize);
-    //     newBlock->nextBlock = resetToNormalPointer(bestBlock->nextBlock);
-    //     newBlock->nextBlock = setBlockFree(newBlock);
-    //     bestBlock->nextBlock = newBlock;
-    //     bestBlock->nextBlock = setBlockOccupied(bestBlock);
-    // } else {
-    //     bestBlock->nextBlock = setBlockOccupied(bestBlock);
-    // }
-
-    printf("laksjdflaksdjf\n");
     return (void*)(((uint8_t*)bestBlock) + ALIGN_BY);
 }
 
@@ -183,13 +141,18 @@ void freeBlock(Allocator* allocator, void* memoryBlock) {
         exit(1);
     }
 
+    BlockInfo* startBlockForConcatenate = NULL;
     if (blockForFree < currentBlock || currentBlock == NULL) {
-        // printf("currentblock == null\n");
         blockForFree->nextBlock = currentBlock;
         blockForFree->nextBlock = setBlockFree(blockForFree);
         allocator->firstFreeBLock = blockForFree;
         allocator->firstFreeBLock->nextBlock = setBlockFree(allocator->firstFreeBLock);
+        
+        // // Конкатенация
+        startBlockForConcatenate = allocator->firstFreeBLock;
     } else {
+        startBlockForConcatenate = currentBlock;
+        
         while (resetToNormalPointer(currentBlock->nextBlock) != NULL && resetToNormalPointer(currentBlock->nextBlock) < blockForFree) {
             currentBlock = resetToNormalPointer(currentBlock->nextBlock);
         }
@@ -197,6 +160,17 @@ void freeBlock(Allocator* allocator, void* memoryBlock) {
         blockForFree->nextBlock = setBlockFree(blockForFree);
         currentBlock->nextBlock = blockForFree;
         currentBlock->nextBlock = setBlockFree(currentBlock);
+    }
+
+    // Если можно объединить, объединяем
+    // Но, чтобы обработать ситуацию когда 3 и более подряд пустых, мы после склеивания не должны менять текущий.
+    while (startBlockForConcatenate != NULL) {
+        if (adjacentBlocksExistsAndFree(startBlockForConcatenate)) {
+            startBlockForConcatenate->blockSize += (ALIGN_BY + resetToNormalPointer(startBlockForConcatenate->nextBlock)->blockSize);
+            startBlockForConcatenate->nextBlock = resetToNormalPointer(startBlockForConcatenate->nextBlock)->nextBlock;
+            continue;
+        }
+        startBlockForConcatenate = resetToNormalPointer(startBlockForConcatenate->nextBlock);
     }
 }
 

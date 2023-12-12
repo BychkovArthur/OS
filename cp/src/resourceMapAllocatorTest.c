@@ -34,7 +34,7 @@ void testWithLightData(Allocator* allocator) {
         size_t currentSize = sizeof(char) * ((rand() % 16) + 1);
         arrays[i] = allocBlock(allocator, currentSize);
         totalRequested += currentSize;
-        totalAllocated += getBlockLengthByGivenMemory(allocator, arrays[i]);
+        totalAllocated += getBlockLengthByGivenMemory(arrays[i]);
     }
 
     size_t timeAfterAlloc = getMicrotime();
@@ -52,7 +52,7 @@ void testWithLightData(Allocator* allocator) {
 }
 
 int main() {
-    Allocator* allocator = createMemoryAllocator(32000000);
+    Allocator* allocator = createMemoryAllocator(40000000);
 
     testWithLightData(allocator);
 

@@ -20,8 +20,7 @@ void destroyMemoryAllocator(Allocator*);
 
 void* allocBlock(Allocator*, size_t);
 void freeBlock(Allocator*, void*);
-// size_t getBlockLengthByBlock(Allocator*, BlockInfo*);
-size_t getBlockLengthByGivenMemory(Allocator*, void*);
+size_t getBlockLengthByGivenMemory(void*);
 void concatenateBlocks(Allocator*);
 
 size_t getOffset(Allocator*, BlockInfo*);
