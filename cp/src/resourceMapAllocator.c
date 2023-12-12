@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#include "../include/blockInfo.h"
+#include "../include/resourceMapBlockInfo.h"
 
 size_t align(size_t memorySize) {
     return memorySize + (ALIGN_BY - (memorySize % ALIGN_BY)) % ALIGN_BY;
@@ -113,4 +113,9 @@ bool adjacentBlocksExistsAndFree(BlockInfo* currentBlock) {
 
 bool currentBlockBetter(BlockInfo* currentBlock, size_t currentBlockLength, size_t blockSize, size_t minLength) {
     return isBlockFree(currentBlock) && currentBlockLength >= blockSize && currentBlockLength < minLength;
+}
+
+void destroyMemoryAllocator(Allocator* allocator) {
+    free(allocator->memory);
+    free(allocator);
 }

@@ -1,4 +1,4 @@
-#include "../include/blockInfo.h"
+#include "../include/resourceMapBlockInfo.h"
 
 bool isBlockFree(BlockInfo* block) {
     return ((size_t)(block->nextBlock) & (size_t)7);

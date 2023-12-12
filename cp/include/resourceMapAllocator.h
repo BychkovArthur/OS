@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 
-#include "blockInfo.h"
+#include "resourceMapBlockInfo.h"
 
 #define ALIGN_BY (sizeof(BlockInfo))
 
@@ -15,6 +15,8 @@ typedef struct _Allocator {
 size_t align(size_t);
 
 Allocator* createMemoryAllocator(size_t);
+void destroyMemoryAllocator(Allocator*);
+
 void* allocBlock(Allocator*, size_t);
 void freeBlock(const Allocator*, void*);
 size_t getBlockLengthByBlock(Allocator*, BlockInfo*);

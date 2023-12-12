@@ -1,5 +1,5 @@
 #include "../include/resourceMapAllocator.h"
-#include "../include/blockInfo.h"
+#include "../include/resourceMapBlockInfo.h"
 
 #include <stdio.h>
 #include <stdint.h>

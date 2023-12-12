@@ -1,5 +1,5 @@
-#ifndef __BLOCK_INFO__
-#define __BLOCK_INFO__
+#ifndef __RESOURCE_MAP_BLOCK_INFO__
+#define __RESOURCE_MAP_BLOCK_INFO__
 
 #include <stdlib.h>
 #include <stdbool.h>
@@ -16,4 +16,4 @@ BlockInfo* resetToNormalPointer(BlockInfo*);
 bool adjacentBlocksExistsAndFree(BlockInfo*);
 bool currentBlockBetter(BlockInfo*, size_t, size_t, size_t);
 
-#endif // __BLOCK_INFO__
+#endif // __RESOURCE_MAP_BLOCK_INFO__
