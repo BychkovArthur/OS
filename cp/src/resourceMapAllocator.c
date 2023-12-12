@@ -83,7 +83,7 @@ void* allocBlock(Allocator* allocator, size_t blockSize) {
     }
     
     if (bestBlock == allocator->firstFreeBLock) {
-
+        
         if (bestBlock->blockSize >= blockSize + ALIGN_BY) {
             blockSize += ALIGN_BY;
             BlockInfo* newBlock = (BlockInfo*)((uint8_t*)bestBlock + blockSize);

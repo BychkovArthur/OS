@@ -23,10 +23,10 @@ void testWithLightData(Allocator* allocator) {
 
     // Выделяем
     for (size_t i = 0; i < 1000000; ++i) {
-        if (i % 100 == 0) {
-            printf("I = %zu\n", i);
+        // if (i % 100 == 0) {
+        //     printf("I = %zu\n", i);
 
-        }
+        // }
         size_t currentSize = sizeof(char) * ((rand() % 16) + 1);
         arrays[i] = allocBlock(allocator, currentSize);
         totalRequested += currentSize;
@@ -88,8 +88,8 @@ void testWithMiddleData(Allocator* allocator) {
 
 
 int main() {
-    Allocator* allocator = createMemoryAllocator(300000000);
+    Allocator* allocator = createMemoryAllocator(40000000);
 
-    // testWithLightData(allocator);
-    testWithMiddleData(allocator);
+    testWithLightData(allocator);
+    // testWithMiddleData(allocator);
 }
