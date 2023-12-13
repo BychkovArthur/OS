@@ -4,7 +4,8 @@ SRC=./src
 BUILD=./build
 INCLUDE=./include
 CC=gcc
-FLAGS=-Wall -Werror -Wextra -Wpedantic
+# FLAGS=-Wall -Werror -Wextra -Wpedantic
+FLAGS= 
 
 test1: clean $(SRC)/resourceMapAllocatorTest.c $(SRC)/resourceMapAllocator.c $(SRC)/resourceMapBlockInfo.c
 	$(CC) $(FLAGS) $(SRC)/resourceMapAllocatorTest.c $(SRC)/resourceMapAllocator.c $(SRC)/resourceMapBlockInfo.c -o $(BUILD)/test1_exe

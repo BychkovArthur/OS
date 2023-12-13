@@ -65,10 +65,13 @@ void* allocBlock(Allocator* allocator, size_t blockSize) {
     BlockInfo* bestPrevBlock = NULL;
     size_t minLength = -1;
     
+    // printf("Allocator first block: %p\n", currentBlock);
+
     while (currentBlock != NULL) {
-        
+        // printf("Make iteration\n");
         size_t currentBlockLength = currentBlock->blockSize;
         if (currentBlockBetter(currentBlock, currentBlockLength, blockSize, minLength)) {
+            // printf("FIT!!!\n");
             bestPrevBlock = prevBlock;
             bestBlock = currentBlock;
             minLength = currentBlockLength;
@@ -141,17 +144,17 @@ void freeBlock(Allocator* allocator, void* memoryBlock) {
         exit(1);
     }
 
-    BlockInfo* startBlockForConcatenate = NULL;
+    BlockInfo* startBlockForConcatenate = currentBlock;
     if (blockForFree < currentBlock || currentBlock == NULL) {
         blockForFree->nextBlock = currentBlock;
         blockForFree->nextBlock = setBlockFree(blockForFree);
         allocator->firstFreeBLock = blockForFree;
-        allocator->firstFreeBLock->nextBlock = setBlockFree(allocator->firstFreeBLock);
+        // allocator->firstFreeBLock->nextBlock = setBlockFree(allocator->firstFreeBLock);
         
-        // // Конкатенация
-        startBlockForConcatenate = allocator->firstFreeBLock;
+        // Конкатенация
+        // startBlockForConcatenate = allocator->firstFreeBLock;
     } else {
-        startBlockForConcatenate = currentBlock;
+        // startBlockForConcatenate = currentBlock;
         
         while (resetToNormalPointer(currentBlock->nextBlock) != NULL && resetToNormalPointer(currentBlock->nextBlock) < blockForFree) {
             currentBlock = resetToNormalPointer(currentBlock->nextBlock);
@@ -166,6 +169,7 @@ void freeBlock(Allocator* allocator, void* memoryBlock) {
     // Но, чтобы обработать ситуацию когда 3 и более подряд пустых, мы после склеивания не должны менять текущий.
     while (startBlockForConcatenate != NULL) {
         if (adjacentBlocksExistsAndFree(startBlockForConcatenate)) {
+            // printf("COONCAT!\n");
             startBlockForConcatenate->blockSize += (ALIGN_BY + resetToNormalPointer(startBlockForConcatenate->nextBlock)->blockSize);
             startBlockForConcatenate->nextBlock = resetToNormalPointer(startBlockForConcatenate->nextBlock)->nextBlock;
             continue;
@@ -179,7 +183,7 @@ bool adjacentBlocksExistsAndFree(BlockInfo* currentBlock) {
 }
 
 bool currentBlockBetter(BlockInfo* currentBlock, size_t currentBlockLength, size_t blockSize, size_t minLength) {
-    return isBlockFree(currentBlock) && currentBlockLength >= blockSize && currentBlockLength < minLength;
+    return currentBlockLength >= blockSize && currentBlockLength < minLength;
 }
 
 void destroyMemoryAllocator(Allocator* allocator) {

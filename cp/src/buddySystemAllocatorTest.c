@@ -50,6 +50,68 @@ void testWithLightData(Allocator* allocator) {
 }
 
 
+
+// Тестирование на выделение с одновременным освобождением данные до 16 байт
+void testLightDataRandom(Allocator* allocator) {
+    srand(time(NULL));
+
+    size_t startTime = getMicrotime();
+
+    size_t totalRequested = 0;
+    size_t totalAllocated = 0;
+    char** arrays = allocBlock(allocator, sizeof(char*) * 1000000);
+    for (size_t i = 0; i < 1000000; ++i) {
+        arrays[i] = NULL;
+    }
+
+    // printf("%zu\n", allocator->firstFreeBLock->blockSize);
+
+    // Выделяем
+    for (size_t i = 0; i < 1000000; ++i) {
+        // printf("I = %zu\n", i);
+        size_t currentSize = sizeof(char) * ((rand() % 16) + 1);
+        // printf("HERE1\n");
+        arrays[i] = allocBlock(allocator, currentSize);
+        totalRequested += currentSize;
+        totalAllocated += ((BlockInfo*)((uint8_t*)arrays[i] - sizeof(BlockInfo)))->size;
+        // printf("HERE2\n");
+
+        // С вероятностью 1 / 8 будем очищать 5 элементов
+        // printf("---------1\n");
+        if (currentSize <= 2) {
+            for (size_t j = 0; j < 5; ++j) {
+                size_t indexToDelete = rand() % (i + 1);
+                if (arrays[indexToDelete] != NULL) {
+                    freeBlock(allocator, arrays[indexToDelete]);
+                    arrays[indexToDelete] = NULL;
+                }
+            }
+        }
+        
+        
+        
+        // printf("---------2\n");
+    }
+    
+
+    for (size_t i = 0; i < 1000000; ++i) {
+        // printf("I = %zu\n", i);
+        if (arrays[i]) {
+            freeBlock(allocator, arrays[i]);
+            arrays[i] = NULL;
+        }
+    }
+    printf("out\n");
+
+    size_t timeAfterAlloc = getMicrotime();
+    printf("totalRequested: %zu\n", totalRequested);
+    printf("totalAllocated: %zu\n", totalAllocated);
+    printf("Microsecs total: %zu\n", timeAfterAlloc - startTime);
+}
+
+
+
+
 // Тестирование на данных от 16 до 512 байт
 void testWithMiddleData(Allocator* allocator) {
     srand(time(NULL));
@@ -90,6 +152,8 @@ void testWithMiddleData(Allocator* allocator) {
 int main() {
     Allocator* allocator = createMemoryAllocator(40000000);
 
-    testWithLightData(allocator);
+    // testWithLightData(allocator);
     // testWithMiddleData(allocator);
+    testLightDataRandom(allocator);
+    void* a = allocBlock(allocator, 34000000);
 }

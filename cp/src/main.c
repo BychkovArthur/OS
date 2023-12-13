@@ -13,6 +13,16 @@
 //     printf("\n");
 // }
 
+void foo(Allocator* allocator, void* alloc) {
+    printf("До освобождения первый блок: %zu\n", allocator->firstFreeBLock == NULL ? 0 : getOffset(allocator, allocator->firstFreeBLock));
+    freeBlock(allocator, alloc);
+    printf("Сдвиг после первого блока %zu\n", getOffset(allocator, allocator->firstFreeBLock));
+    printf("Сдвиг после текущего блока: %zu\n", getOffset(allocator, alloc - 16));
+    printf("Длина: %zu\n", getBlockLengthByGivenMemory(alloc));
+    printf("Свободен: %zu\n", isBlockFree(alloc - 16));
+    printf("\n\n\n");
+}
+
 int main() {
     size_t d;
     scanf("%zu", &d);
@@ -54,69 +64,48 @@ int main() {
 
     // allocBlock(allocator, 5);
 
-    printf("До освобождения %zu\n", allocator->firstFreeBLock);
-    freeBlock(allocator, alloc3);
-    printf("ПОСЛЕ 1 %zu\n", getOffset(allocator, allocator->firstFreeBLock));
-    printf("После: %zu\n", getOffset(allocator, alloc3 - 16));
-    printf("После длина: %zu\n", getBlockLengthByGivenMemory(alloc3));
-    printf("Свободен: %zu\n", isBlockFree(alloc3 - 16));
-    printf("\n\n\n");
+    foo(allocator, alloc2);
+    foo(allocator, alloc1);
+    foo(allocator, alloc3);
 
-    printf("До освобождения %zu\n", getOffset(allocator, allocator->firstFreeBLock));
-    freeBlock(allocator, alloc1);
-    printf("ПОСЛЕ 1 %zu\n", getOffset(allocator, allocator->firstFreeBLock));
-    printf("После: %zu\n", getOffset(allocator, alloc1 - 16));
-    printf("После длина: %zu\n", getBlockLengthByGivenMemory(alloc1));
-    printf("Свободен: %zu\n", isBlockFree(alloc1 - 16));
-    printf("\n\n\n");
+    // void* alloc6 = allocBlock(allocator, 128);
+    // printf("Начало 6 блока: %zu\n", alloc6 - allocator->memory);
+    // printf("Размер 6 блока: %zu\n", getBlockLengthByGivenMemory(alloc6));
+    // printf("ПОСЛЕ 1 %p\n", allocator->firstFreeBLock);
+    // printf("\n\n\n");
 
+    // printf("До освобождения %zu\n", getOffset(allocator, allocator->firstFreeBLock));
+    // freeBlock(allocator, alloc5);
+    // printf("ПОСЛЕ 1 %zu\n", getOffset(allocator, allocator->firstFreeBLock));
+    // printf("После: %zu\n", getOffset(allocator, alloc5 - 16));
+    // printf("После длина: %zu\n", getBlockLengthByGivenMemory(alloc5));
+    // printf("Свободен: %zu\n", isBlockFree(alloc5 - 16));
+    // printf("\n\n\n");
 
-    printf("До освобождения %zu\n", getOffset(allocator, allocator->firstFreeBLock));
-    freeBlock(allocator, alloc2);
-    printf("ПОСЛЕ 1 %zu\n", getOffset(allocator, allocator->firstFreeBLock));
-    printf("После: %zu\n", getOffset(allocator, alloc2 - 16));
-    printf("После длина: %zu\n", getBlockLengthByGivenMemory(alloc2));
-    printf("Свободен: %zu\n", isBlockFree(alloc2 - 16));
-    printf("\n\n\n");
+    // printf("До освобождения %zu\n", getOffset(allocator, allocator->firstFreeBLock));
+    // freeBlock(allocator, alloc4);
+    // printf("ПОСЛЕ 1 %zu\n", getOffset(allocator, allocator->firstFreeBLock));
+    // printf("После: %zu\n", getOffset(allocator, alloc4 - 16));
+    // printf("После длина: %zu\n", getBlockLengthByGivenMemory(alloc4));
+    // printf("Свободен: %zu\n", isBlockFree(alloc4 - 16));
+    // printf("\n\n\n");
 
-    void* alloc6 = allocBlock(allocator, 128);
-    printf("Начало 6 блока: %zu\n", alloc6 - allocator->memory);
-    printf("Размер 6 блока: %zu\n", getBlockLengthByGivenMemory(alloc6));
-    printf("ПОСЛЕ 1 %p\n", allocator->firstFreeBLock);
-    printf("\n\n\n");
-
-    printf("До освобождения %zu\n", getOffset(allocator, allocator->firstFreeBLock));
-    freeBlock(allocator, alloc5);
-    printf("ПОСЛЕ 1 %zu\n", getOffset(allocator, allocator->firstFreeBLock));
-    printf("После: %zu\n", getOffset(allocator, alloc5 - 16));
-    printf("После длина: %zu\n", getBlockLengthByGivenMemory(alloc5));
-    printf("Свободен: %zu\n", isBlockFree(alloc5 - 16));
-    printf("\n\n\n");
-
-    printf("До освобождения %zu\n", getOffset(allocator, allocator->firstFreeBLock));
-    freeBlock(allocator, alloc4);
-    printf("ПОСЛЕ 1 %zu\n", getOffset(allocator, allocator->firstFreeBLock));
-    printf("После: %zu\n", getOffset(allocator, alloc4 - 16));
-    printf("После длина: %zu\n", getBlockLengthByGivenMemory(alloc4));
-    printf("Свободен: %zu\n", isBlockFree(alloc4 - 16));
-    printf("\n\n\n");
-
-    printf("До освобождения %zu\n", getOffset(allocator, allocator->firstFreeBLock));
-    freeBlock(allocator, alloc6);
-    printf("ПОСЛЕ 1 %zu\n", getOffset(allocator, allocator->firstFreeBLock));
-    printf("После: %zu\n", getOffset(allocator, alloc6 - 16));
-    printf("После длина: %zu\n", getBlockLengthByGivenMemory(alloc6));
-    printf("Свободен: %zu\n", isBlockFree(alloc6 - 16));
-    printf("\n\n\n");
+    // printf("До освобождения %zu\n", getOffset(allocator, allocator->firstFreeBLock));
+    // freeBlock(allocator, alloc6);
+    // printf("ПОСЛЕ 1 %zu\n", getOffset(allocator, allocator->firstFreeBLock));
+    // printf("После: %zu\n", getOffset(allocator, alloc6 - 16));
+    // printf("После длина: %zu\n", getBlockLengthByGivenMemory(alloc6));
+    // printf("Свободен: %zu\n", isBlockFree(alloc6 - 16));
+    // printf("\n\n\n");
     
-    printf("До освобождения %zu\n", getOffset(allocator, allocator->firstFreeBLock));
-    alloc1 = allocBlock(allocator, 10);
-    printf("ПОСЛЕ 1 %zu\n", getOffset(allocator, allocator->firstFreeBLock));
-    printf("Начало первого блока: %zu\n", alloc1 - allocator->memory);
-    printf("Размер первого блока: %zu\n", getBlockLengthByGivenMemory(alloc1));
-    printf("Размер 2 блока: %zu\n", getBlockLengthByGivenMemory(alloc1 + 16));
-    printf("Свободен: %zu\n", isBlockFree(alloc1 - 16));
-    printf("Свободен: %zu\n", isBlockFree(alloc1 + 16));
+    // printf("До освобождения %zu\n", getOffset(allocator, allocator->firstFreeBLock));
+    // alloc1 = allocBlock(allocator, 10);
+    // printf("ПОСЛЕ 1 %zu\n", getOffset(allocator, allocator->firstFreeBLock));
+    // printf("Начало первого блока: %zu\n", alloc1 - allocator->memory);
+    // printf("Размер первого блока: %zu\n", getBlockLengthByGivenMemory(alloc1));
+    // printf("Размер 2 блока: %zu\n", getBlockLengthByGivenMemory(alloc1 + 16));
+    // printf("Свободен: %zu\n", isBlockFree(alloc1 - 16));
+    // printf("Свободен: %zu\n", isBlockFree(alloc1 + 16));
 
     // printf("Длина всего3: %zu\n", getBlockLengthByBlock(allocator, (BlockInfo*)allocator->memory));
     // printf("Длина всего1: %zu\n", getBlockLengthByBlock(allocator, (BlockInfo*)allocator->memory));

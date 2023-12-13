@@ -45,9 +45,11 @@ int main() {
 
     void* m10 = allocBlock(allocator, 128 - 24);
     printf("HERE10 %zu\n", m10 - allocator->memory);
+    printBlocks(allocator);
     freeBlock(allocator, m10);
     freeBlock(allocator, m8);
     freeBlock(allocator, m1);
     freeBlock(allocator, m4);
+    printBlocks(allocator);
     printBlocks(allocator);
 }

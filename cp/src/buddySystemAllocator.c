@@ -10,6 +10,16 @@
 // - Проверка на уничтожение верного блока
 
 BlockInfo* blocks[MAX_POWER_OF_TWO - MIN_POWER_OF_TWO + 1];
+// size_t powersOfTwo[MAX_POWER_OF_TWO + 1];
+// size_t valuesOfPowerOfTwo[MAX_POWER_OF_TWO + 1];
+
+// void fillPowersOfTwo() {
+//     size_t power = 1;
+//     for (size_t i = 0; i < MAX_POWER_OF_TWO + 1; ++i) {
+//         powersOfTwo[i] = power;
+//         power <<= 1;
+//     }
+// }
 
 void printBlocks(Allocator* allocator) {
     for (int i = 0; i < 10; ++i) {
@@ -50,6 +60,8 @@ void initArrayOfBlocks() {
 }
 
 Allocator* createMemoryAllocator(size_t memorySize) {
+    // fillPowersOfTwo();
+    // printf("%zu\n", powersOfTwo[5]);
     if (memorySize == 0) {
         fprintf(stderr, "Invalid memory size 0\n");
         exit(1);
@@ -61,9 +73,9 @@ Allocator* createMemoryAllocator(size_t memorySize) {
         exit(1);
     }
 
-    memorySize += sizeof(BlockInfo);
+    memorySize += sizeof(BlockInfo); // Добавляем размер структуры
     memorySize = align(memorySize); // Выравниваем саму память
-    // Добавляем размер структуры
+    
 
     uint8_t* memory = malloc(memorySize); // malloc выравнивает память по 8 (или 16 или 32...)
     if (memory == NULL) {
@@ -76,6 +88,7 @@ Allocator* createMemoryAllocator(size_t memorySize) {
     BlockInfo block = {
         memorySize,
         true,
+        NULL,
         NULL,
     };
 
@@ -130,6 +143,7 @@ void* recursiveAlloc(Allocator* allocator, size_t powerOfTwo, size_t goodBlockId
         newBlockSize,
         true,
         NULL,
+        NULL,
     };
 
     // Находим место в память для блока близнеца, кладем туда новый блок
@@ -153,11 +167,13 @@ void freeBlock(const Allocator* allocator, void* block) {
 }
 
 void concatenateBlocks(const Allocator* allocator, BlockInfo* currentBlock) {
+    // printf("Start concat\n");
     BlockInfo* buddy = getBuddy(allocator, currentBlock);
 
     size_t blockID = getPowerOf2(currentBlock->size) - MIN_POWER_OF_TWO;
     if (currentBlock < buddy) {
         if (buddy->isFree && buddy->size == currentBlock->size) {
+            // printf("HERE1\n");
             removeBlock(&blocks[blockID], buddy);
             currentBlock->size *= 2;
             concatenateBlocks(allocator, currentBlock);
@@ -166,7 +182,9 @@ void concatenateBlocks(const Allocator* allocator, BlockInfo* currentBlock) {
         }
     } else if (currentBlock > buddy) {
         if (buddy->isFree && buddy->size == currentBlock->size) {
+            // printf("HERE2\n");
             removeBlock(&blocks[blockID], buddy);
+            // printf("HERE22\n");
             buddy->size *= 2;
             concatenateBlocks(allocator, buddy);
         } else {
@@ -176,6 +194,7 @@ void concatenateBlocks(const Allocator* allocator, BlockInfo* currentBlock) {
         fprintf(stderr, "Something went wrong ...\n");
         exit(1);
     }
+    // printf("End concat\n");
 }
 
 BlockInfo* getBuddy(const Allocator* allocator, BlockInfo* currentBlock) {
