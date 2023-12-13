@@ -23,8 +23,10 @@ void testWithLightData(Allocator* allocator) {
 
     // Выделяем
     for (size_t i = 0; i < 1000000; ++i) {
+        printf("I = %zu\n", i);
         size_t currentSize = sizeof(char) * ((rand() % 16) + 1);
         arrays[i] = allocBlock(allocator, currentSize);
+        printf(".\n");
         totalRequested += currentSize;
         totalAllocated += getBlockLengthByGivenMemory(arrays[i]) + sizeof(BlockInfo);
     }
@@ -34,11 +36,11 @@ void testWithLightData(Allocator* allocator) {
     printf("totalAllocated: %zu\n", totalAllocated);
     printf("Microsecs to alloc: %zu\n", timeAfterAlloc - startTime);
 
+    printf("HERE\n");
     for (size_t i = 0; i < 1000000; ++i) {
         freeBlock(allocator, arrays[i]);
     }
     freeBlock(allocator, arrays);
-
     size_t timeAfterFree = getMicrotime();
     printf("Microsecs to free: %zu\n", timeAfterFree - timeAfterAlloc);
 }
@@ -107,9 +109,10 @@ void testLightDataRandom(Allocator* allocator) {
 }
 
 int main() {
-    Allocator* allocator = createMemoryAllocator(4000000);
+    Allocator* allocator = createMemoryAllocator(40000000 + 100);
 
     // testWithLightData(allocator);
     testLightDataRandom(allocator);
-    void* a = allocBlock(allocator, 4000000 - 1000000);
+    void* a = allocBlock(allocator, 40000000);
+    // void* a = allocBlock(allocator, 4000000 - 1000000);
 }

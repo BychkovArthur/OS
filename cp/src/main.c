@@ -39,20 +39,20 @@ int main() {
     void* alloc3 = allocBlock(allocator, 33);
     void* alloc4 = allocBlock(allocator, 832);
     printf("Вызов 5\n");
-    void* alloc5 = allocBlock(allocator, 1);
+    // void* alloc5 = allocBlock(allocator, 1);
 
     
     printf("Начало первого блока: %zu\n", alloc1 - allocator->memory);
     printf("Начало второго блока: %zu\n", alloc2 - allocator->memory);
     printf("Начало третьего блока: %zu\n", alloc3 - allocator->memory);
     printf("Начало четвертого блока: %zu\n", alloc4 - allocator->memory);
-    printf("Начало 5 блока: %zu\n", alloc5 - allocator->memory);
+    // printf("Начало 5 блока: %zu\n", alloc5 - allocator->memory);
     // printf("Начало памяти       : %ld\nНачало первого блока: %ld\nНачало второго блока: %ld\n", allocator->memory, alloc1 - allocator->memory, alloc2 - allocator->memory);
     printf("Размер первого блока: %zu\n", getBlockLengthByGivenMemory(alloc1));
     printf("Размер второго блока: %zu\n", getBlockLengthByGivenMemory(alloc2));
     printf("Размер третьего блока: %zu\n", getBlockLengthByGivenMemory(alloc3));
     printf("Размер четвертого блока: %zu\n", getBlockLengthByGivenMemory(alloc4));
-    printf("Размер 5 блока: %zu\n", getBlockLengthByGivenMemory(alloc5));
+    // printf("Размер 5 блока: %zu\n", getBlockLengthByGivenMemory(alloc5));
     // printf("Размер третьего блока: %zu\n", ((BlockInfo*)(alloc2 + 32))->blockSize);
     // printf("Размер третьего блока: %zu\n", getBlockLengthByGivenMemory((void*)((uint8_t*)alloc2 + 40)));
     // printf("HERE %ld\n", (alloc2 + 32) - allocator->memory);
@@ -63,7 +63,7 @@ int main() {
     printf("\n\n\n");
 
     // allocBlock(allocator, 5);
-
+    printf("SIZE: %zu\n", ((BlockInfo*)(alloc4 + 832))->blockSize);
     foo(allocator, alloc2);
     foo(allocator, alloc1);
     foo(allocator, alloc3);

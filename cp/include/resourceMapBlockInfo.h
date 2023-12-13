@@ -14,7 +14,7 @@ BlockInfo* setBlockFree(BlockInfo*);
 BlockInfo* setBlockOccupied(BlockInfo*);
 BlockInfo* resetToNormalPointer(BlockInfo*);
 
-bool adjacentBlocksExistsAndFree(BlockInfo*);
-bool currentBlockBetter(BlockInfo*, size_t, size_t, size_t);
+bool canConcatenate(BlockInfo*);
+bool currentBlockBetter(size_t, size_t, size_t);
 
 #endif // __RESOURCE_MAP_BLOCK_INFO__

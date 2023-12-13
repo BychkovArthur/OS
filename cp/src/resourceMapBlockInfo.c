@@ -5,11 +5,11 @@ bool isBlockFree(BlockInfo* block) {
 }
 
 BlockInfo* setBlockFree(BlockInfo* block) {
-    return (BlockInfo*)((size_t)(block->nextBlock) | (size_t)7);
+    return block->nextBlock = (BlockInfo*)((size_t)(block->nextBlock) | (size_t)7);
 }
 
 BlockInfo* setBlockOccupied(BlockInfo* block) {
-    return (BlockInfo*)((size_t)(block->nextBlock) & ~(size_t)7);
+    return block->nextBlock = (BlockInfo*)((size_t)(block->nextBlock) & ~(size_t)7);
 }
 
 
