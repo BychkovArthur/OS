@@ -15,12 +15,16 @@ size_t getMicrotime() {
 }
 
 void testWithLightDataSequential(Allocator* allocator) {
+    printf("-----------------------------------------------------------------------------\n");
+    printf("Testing on data betwen 1 and 16 bytes. Sequential allocation and release\nTotal number of tests: %d\n\n", LIGHT_DATA_SEQUENTIAL_TEST_COUNT);
     srand(time(NULL));
 
     size_t totalRequested = 0;
     size_t totalAllocated = 0;
     size_t totalTimeToAllocate = 0;
     size_t totalTimeToFree = 0;
+
+    size_t testVariable = 0;
 
     char** arrays = allocBlock(allocator, sizeof(char*) * LIGHT_DATA_SEQUENTIAL_ARRAY_SIZE);
 
@@ -41,6 +45,10 @@ void testWithLightDataSequential(Allocator* allocator) {
 
             size_t currentSize = sizeof(char) * ((rand() % 16) + 1);
             arrays[i] = allocBlock(allocator, currentSize);
+
+            arrays[i][0] = (i + currentSize) % 10; // Просто заполняем, чтобы компилятор ничего не оптимизировал
+            testVariable += arrays[i][0];
+
             totalRequested += currentSize;
             totalAllocated += getBlockLengthByGivenMemory(arrays[i]) + sizeof(BlockInfo);
         }
@@ -62,73 +70,522 @@ void testWithLightDataSequential(Allocator* allocator) {
         totalTimeToFree += (getMicrotime() - currentFreeStart);
     }
 
-    printf("totalRequested: %zu\n", totalRequested);
-    printf("totalAllocated: %zu\n", totalAllocated);
-    printf("Microsecs to alloc: %zu\n", totalTimeToAllocate);
-    printf("Microsecs to free: %zu\n", totalTimeToFree);
+    printf("Total memory requested: %zu\n", totalRequested);
+    printf("Total memory allocated: %zu\n", totalAllocated);
+    printf("Microseconds to allocate: %zu\n", totalTimeToAllocate);
+    printf("Microseconds to free: %zu\n\n", totalTimeToFree);
+
+    printf("Average requested memory: %Lf\n", (long double)totalRequested / LIGHT_DATA_SEQUENTIAL_TEST_COUNT);
+    printf("Average allocated memory: %Lf\n", (long double)totalAllocated / LIGHT_DATA_SEQUENTIAL_TEST_COUNT);
+    printf("Average microseconds to allocate: %Lf\n", (long double)totalTimeToAllocate / LIGHT_DATA_SEQUENTIAL_TEST_COUNT);
+    printf("Average microseconds to free: %Lf\n", (long double)totalTimeToFree / LIGHT_DATA_SEQUENTIAL_TEST_COUNT);
+    printf("-----------------------------------------------------------------------------\n\n");
 
     freeBlock(allocator, arrays);
 }
 
 void testLightDataRandom(Allocator* allocator) {
+    printf("-----------------------------------------------------------------------------\n");
+    printf("Testing on data betwen 1 and 16 bytes. With probability 1/8 5 random elements are removed.\nTotal number of tests: %d\n\n", LIGHT_DATA_RANDOM_TEST_COUNT);
     srand(time(NULL));
-
-    size_t startTime = getMicrotime();
 
     size_t totalRequested = 0;
     size_t totalAllocated = 0;
+    size_t totalTimeToAllocate = 0;
+    size_t totalTimeToFree = 0;
+
+    size_t testVariable = 0;
+
     char** arrays = allocBlock(allocator, sizeof(char*) * LIGHT_DATA_RANDOM_ARRAY_SIZE);
     for (size_t i = 0; i < LIGHT_DATA_RANDOM_ARRAY_SIZE; ++i) {
         arrays[i] = NULL;
     }
-#ifdef INFO
+
+    #ifdef INFO
     printf("First block length: %zu\n", allocator->firstFreeBLock->blockSize);
-#endif
+    #endif
 
-    // Выделяем
-    for (size_t i = 0; i < LIGHT_DATA_RANDOM_ARRAY_SIZE; ++i) {
-#ifdef INFO
-        printf("Allocating. I = %zu\n", i);
-#endif
-        size_t currentSize = sizeof(char) * ((rand() % 16) + 1);
-        arrays[i] = allocBlock(allocator, currentSize);
+    for (size_t iteration = 0; iteration < LIGHT_DATA_RANDOM_TEST_COUNT; ++iteration) {
 
-        totalRequested += currentSize;
-        totalAllocated += getBlockLengthByGivenMemory(arrays[i]) + sizeof(BlockInfo);
+        #ifdef INFO
+        printf("Iteration = %zu\n", iteration);
+        #endif
 
-        // С вероятностью 1 / 8 будем очищать 5 элементов
-        if (currentSize <= 2) {
-            for (size_t j = 0; j < 5; ++j) {
-                size_t indexToDelete = rand() % (i + 1);
-                if (arrays[indexToDelete]) {
-#ifdef INFO
-                    printf("Free. I = %zu\n", indexToDelete);
-#endif
-                    freeBlock(allocator, arrays[indexToDelete]);
-                    arrays[indexToDelete] = NULL;
+        size_t startAllocatingTime = getMicrotime();
+        size_t timeToFreeWhileAllocating = 0;
+
+        // Выделяем
+        for (size_t i = 0; i < LIGHT_DATA_RANDOM_ARRAY_SIZE; ++i) {
+
+            #ifdef INFO
+            printf("Allocating. I = %zu\n", i);
+            #endif
+
+            size_t currentSize = sizeof(char) * ((rand() % 16) + 1);
+            arrays[i] = allocBlock(allocator, currentSize);
+
+            arrays[i][0] = (i + currentSize) % 10; // Просто заполняем, чтобы компилятор ничего не оптимизировал
+            testVariable += arrays[i][0];
+
+            totalRequested += currentSize;
+            totalAllocated += getBlockLengthByGivenMemory(arrays[i]) + sizeof(BlockInfo);
+
+            // С вероятностью 1 / 8 будем очищать 5 элементов
+            if (currentSize <= 2) {
+
+                size_t timeForFreeRandom = getMicrotime();
+
+                for (size_t j = 0; j < 5; ++j) {
+                    size_t indexToDelete = rand() % (i + 1);
+                    if (arrays[indexToDelete]) {
+                        
+                        #ifdef INFO
+                        printf("Free. I = %zu\n", indexToDelete);
+                        #endif
+
+                        freeBlock(allocator, arrays[indexToDelete]);
+                        arrays[indexToDelete] = NULL;
+                    }
                 }
 
+                size_t currentMicroseconds = getMicrotime();
+
+                timeToFreeWhileAllocating += (currentMicroseconds - timeForFreeRandom);
+                totalTimeToFree += (currentMicroseconds - timeForFreeRandom);
             }
         }
-        
-    }
 
-    size_t timeAfterAlloc = getMicrotime();
-    printf("Microsecs to alloc + some free: %zu\n", timeAfterAlloc - startTime);
+        totalTimeToAllocate += (getMicrotime() - startAllocatingTime - timeToFreeWhileAllocating);
 
-    for (size_t i = 0; i < LIGHT_DATA_RANDOM_ARRAY_SIZE; ++i) {
-        if (arrays[i]) {
-#ifdef INFO
-            printf("Free. I = %zu\n", i);
-#endif
-            freeBlock(allocator, arrays[i]);
-            arrays[i] = NULL;
+        size_t startFreeTime = getMicrotime();
+
+        // Освобождаем остатки памяти
+        for (size_t i = 0; i < LIGHT_DATA_RANDOM_ARRAY_SIZE; ++i) {
+            if (arrays[i]) {
+
+                #ifdef INFO
+                printf("Free. I = %zu\n", i);
+                #endif
+                
+                freeBlock(allocator, arrays[i]);
+                arrays[i] = NULL;
+            }
         }
-    }
-    freeBlock(allocator, arrays);
 
-    size_t timeAfterFree = getMicrotime();
-    printf("totalRequested: %zu\n", totalRequested);
-    printf("totalAllocated: %zu\n", totalAllocated);
-    printf("Microsecs to free left: %zu\n", timeAfterFree - timeAfterAlloc);
+        totalTimeToFree += (getMicrotime() - startFreeTime);
+    }
+
+    printf("Total memory requested: %zu\n", totalRequested);
+    printf("Total memory allocated: %zu\n", totalAllocated);
+    printf("Microseconds to allocate: %zu\n", totalTimeToAllocate);
+    printf("Microseconds to free: %zu\n\n", totalTimeToFree);
+
+    printf("Average requested memory: %Lf\n", (long double)totalRequested / LIGHT_DATA_RANDOM_TEST_COUNT);
+    printf("Average allocated memory: %Lf\n", (long double)totalAllocated / LIGHT_DATA_RANDOM_TEST_COUNT);
+    printf("Average microseconds to allocate: %Lf\n", (long double)totalTimeToAllocate / LIGHT_DATA_RANDOM_TEST_COUNT);
+    printf("Average microseconds to free: %Lf\n", (long double)totalTimeToFree / LIGHT_DATA_RANDOM_TEST_COUNT);
+    printf("-----------------------------------------------------------------------------\n\n");
+
+    freeBlock(allocator, arrays);
+}
+
+void testWithMediumDataSequential(Allocator* allocator) {
+    printf("-----------------------------------------------------------------------------\n");
+    printf("Testing on data betwen 16 and 256 bytes. Sequential allocation and release\nTotal number of tests: %d\n\n", MEDIUM_DATA_SEQUENTIAL_TEST_COUNT);
+    srand(time(NULL));
+
+    size_t totalRequested = 0;
+    size_t totalAllocated = 0;
+    size_t totalTimeToAllocate = 0;
+    size_t totalTimeToFree = 0;
+
+    size_t testVariable = 0;
+
+    char** arrays = allocBlock(allocator, sizeof(char*) * MEDIUM_DATA_SEQUENTIAL_ARRAY_SIZE);
+
+    for (size_t iteration = 0; iteration < MEDIUM_DATA_SEQUENTIAL_TEST_COUNT; ++iteration) {
+
+        #ifdef INFO
+        printf("Test number: %zu\n", iteration + 1);
+        #endif
+
+        size_t currentIterationStart = getMicrotime();
+
+        // Выделяем
+        for (size_t i = 0; i < MEDIUM_DATA_SEQUENTIAL_ARRAY_SIZE; ++i) {
+
+            #ifdef INFO
+            printf("Allocating. I = %zu\n", i);
+            #endif
+
+            // Размер будет от 16 до 256 байт
+            size_t currentSize = sizeof(char) * ((rand() % (256 - 15)) + 16);
+            arrays[i] = allocBlock(allocator, currentSize);
+
+            arrays[i][0] = (i + currentSize) % 10; // Просто заполняем, чтобы компилятор ничего не оптимизировал
+            testVariable += arrays[i][0];
+
+            totalRequested += currentSize;
+            totalAllocated += getBlockLengthByGivenMemory(arrays[i]) + sizeof(BlockInfo);
+        }
+
+        // Добавляем время необходимое для выделения памяти
+        totalTimeToAllocate += (getMicrotime() - currentIterationStart);
+
+        size_t currentFreeStart = getMicrotime();
+
+        for (size_t i = 0; i < MEDIUM_DATA_SEQUENTIAL_ARRAY_SIZE; ++i) {
+
+            #ifdef INFO
+            printf("Free. I = %zu\n", i);
+            #endif
+
+            freeBlock(allocator, arrays[i]);
+        }
+
+        totalTimeToFree += (getMicrotime() - currentFreeStart);
+    }
+
+    printf("Total memory requested: %zu\n", totalRequested);
+    printf("Total memory allocated: %zu\n", totalAllocated);
+    printf("Microseconds to allocate: %zu\n", totalTimeToAllocate);
+    printf("Microseconds to free: %zu\n\n", totalTimeToFree);
+
+    printf("Average requested memory: %Lf\n", (long double)totalRequested / MEDIUM_DATA_SEQUENTIAL_TEST_COUNT);
+    printf("Average allocated memory: %Lf\n", (long double)totalAllocated / MEDIUM_DATA_SEQUENTIAL_TEST_COUNT);
+    printf("Average microseconds to allocate: %Lf\n", (long double)totalTimeToAllocate / MEDIUM_DATA_SEQUENTIAL_TEST_COUNT);
+    printf("Average microseconds to free: %Lf\n", (long double)totalTimeToFree / MEDIUM_DATA_SEQUENTIAL_TEST_COUNT);
+    printf("-----------------------------------------------------------------------------\n\n");
+
+    freeBlock(allocator, arrays);
+}
+
+void testWithMediumDataRandom(Allocator* allocator) {
+    printf("-----------------------------------------------------------------------------\n");
+    printf("Testing on data betwen 16 and 256 bytes. With probability 1/8 5 random elements are removed.\nTotal number of tests: %d\n\n", MEDIUM_DATA_RANDOM_TEST_COUNT);
+    srand(time(NULL));
+
+    size_t totalRequested = 0;
+    size_t totalAllocated = 0;
+    size_t totalTimeToAllocate = 0;
+    size_t totalTimeToFree = 0;
+
+    size_t testVariable = 0;
+
+    char** arrays = allocBlock(allocator, sizeof(char*) * MEDIUM_DATA_RANDOM_ARRAY_SIZE);
+    for (size_t i = 0; i < MEDIUM_DATA_RANDOM_ARRAY_SIZE; ++i) {
+        arrays[i] = NULL;
+    }
+
+    #ifdef INFO
+    printf("First block length: %zu\n", allocator->firstFreeBLock->blockSize);
+    #endif
+
+    for (size_t iteration = 0; iteration < MEDIUM_DATA_RANDOM_TEST_COUNT; ++iteration) {
+
+        #ifdef INFO
+        printf("Iteration = %zu\n", iteration);
+        #endif
+
+        size_t startAllocatingTime = getMicrotime();
+        size_t timeToFreeWhileAllocating = 0;
+
+        // Выделяем
+        for (size_t i = 0; i < MEDIUM_DATA_RANDOM_ARRAY_SIZE; ++i) {
+
+            #ifdef INFO
+            printf("Allocating. I = %zu\n", i);
+            #endif
+
+            size_t currentSize = sizeof(char) * ((rand() % (256 - 15)) + 16);
+            arrays[i] = allocBlock(allocator, currentSize);
+
+            arrays[i][0] = (i + currentSize) % 10; // Просто заполняем, чтобы компилятор ничего не оптимизировал
+            testVariable += arrays[i][0];
+
+            totalRequested += currentSize;
+            totalAllocated += getBlockLengthByGivenMemory(arrays[i]) + sizeof(BlockInfo);
+
+            // С вероятностью 1 / 8 будем очищать 5 элементов
+            if (currentSize <= 46) {
+
+                size_t timeForFreeRandom = getMicrotime();
+
+                for (size_t j = 0; j < 5; ++j) {
+                    size_t indexToDelete = rand() % (i + 1);
+                    if (arrays[indexToDelete]) {
+                        
+                        #ifdef INFO
+                        printf("Free. I = %zu\n", indexToDelete);
+                        #endif
+
+                        freeBlock(allocator, arrays[indexToDelete]);
+                        arrays[indexToDelete] = NULL;
+                    }
+                }
+
+                size_t currentMicroseconds = getMicrotime();
+
+                timeToFreeWhileAllocating += (currentMicroseconds - timeForFreeRandom);
+                totalTimeToFree += (currentMicroseconds - timeForFreeRandom);
+            }
+        }
+
+        totalTimeToAllocate += (getMicrotime() - startAllocatingTime - timeToFreeWhileAllocating);
+
+        size_t startFreeTime = getMicrotime();
+
+        // Освобождаем остатки памяти
+        for (size_t i = 0; i < MEDIUM_DATA_RANDOM_ARRAY_SIZE; ++i) {
+            if (arrays[i]) {
+
+                #ifdef INFO
+                printf("Free. I = %zu\n", i);
+                #endif
+                
+                freeBlock(allocator, arrays[i]);
+                arrays[i] = NULL;
+            }
+        }
+
+        totalTimeToFree += (getMicrotime() - startFreeTime);
+    }
+
+    printf("Total memory requested: %zu\n", totalRequested);
+    printf("Total memory allocated: %zu\n", totalAllocated);
+    printf("Microseconds to allocate: %zu\n", totalTimeToAllocate);
+    printf("Microseconds to free: %zu\n\n", totalTimeToFree);
+
+    printf("Average requested memory: %Lf\n", (long double)totalRequested / MEDIUM_DATA_RANDOM_TEST_COUNT);
+    printf("Average allocated memory: %Lf\n", (long double)totalAllocated / MEDIUM_DATA_RANDOM_TEST_COUNT);
+    printf("Average microseconds to allocate: %Lf\n", (long double)totalTimeToAllocate / MEDIUM_DATA_RANDOM_TEST_COUNT);
+    printf("Average microseconds to free: %Lf\n", (long double)totalTimeToFree / MEDIUM_DATA_RANDOM_TEST_COUNT);
+    printf("-----------------------------------------------------------------------------\n\n");
+
+    freeBlock(allocator, arrays);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void testWithBigDataSequential(Allocator* allocator) {
+    printf("-----------------------------------------------------------------------------\n");
+    printf("Testing on data betwen 256 and 2048 bytes. Sequential allocation and release\nTotal number of tests: %d\n\n", BIG_DATA_SEQUENTIAL_TEST_COUNT);
+    srand(time(NULL));
+
+    size_t totalRequested = 0;
+    size_t totalAllocated = 0;
+    size_t totalTimeToAllocate = 0;
+    size_t totalTimeToFree = 0;
+
+    size_t testVariable = 0;
+
+    char** arrays = allocBlock(allocator, sizeof(char*) * BIG_DATA_SEQUENTIAL_ARRAY_SIZE);
+
+    for (size_t iteration = 0; iteration < BIG_DATA_SEQUENTIAL_TEST_COUNT; ++iteration) {
+
+        #ifdef INFO
+        printf("Test number: %zu\n", iteration + 1);
+        #endif
+
+        size_t currentIterationStart = getMicrotime();
+
+        // Выделяем
+        for (size_t i = 0; i < BIG_DATA_SEQUENTIAL_ARRAY_SIZE; ++i) {
+
+            #ifdef INFO
+            printf("Allocating. I = %zu\n", i);
+            #endif
+
+            // Размер будет от 256 до 2048 байт
+            size_t currentSize = sizeof(char) * ((rand() % (2048 - 255)) + 256);
+            arrays[i] = allocBlock(allocator, currentSize);
+
+            arrays[i][0] = (i + currentSize) % 10; // Просто заполняем, чтобы компилятор ничего не оптимизировал
+            testVariable += arrays[i][0];
+
+            totalRequested += currentSize;
+            totalAllocated += getBlockLengthByGivenMemory(arrays[i]) + sizeof(BlockInfo);
+        }
+
+        // Добавляем время необходимое для выделения памяти
+        totalTimeToAllocate += (getMicrotime() - currentIterationStart);
+
+        size_t currentFreeStart = getMicrotime();
+
+        for (size_t i = 0; i < BIG_DATA_SEQUENTIAL_ARRAY_SIZE; ++i) {
+
+            #ifdef INFO
+            printf("Free. I = %zu\n", i);
+            #endif
+
+            freeBlock(allocator, arrays[i]);
+        }
+
+        totalTimeToFree += (getMicrotime() - currentFreeStart);
+    }
+
+    printf("Total memory requested: %zu\n", totalRequested);
+    printf("Total memory allocated: %zu\n", totalAllocated);
+    printf("Microseconds to allocate: %zu\n", totalTimeToAllocate);
+    printf("Microseconds to free: %zu\n\n", totalTimeToFree);
+
+    printf("Average requested memory: %Lf\n", (long double)totalRequested / BIG_DATA_SEQUENTIAL_TEST_COUNT);
+    printf("Average allocated memory: %Lf\n", (long double)totalAllocated / BIG_DATA_SEQUENTIAL_TEST_COUNT);
+    printf("Average microseconds to allocate: %Lf\n", (long double)totalTimeToAllocate / BIG_DATA_SEQUENTIAL_TEST_COUNT);
+    printf("Average microseconds to free: %Lf\n", (long double)totalTimeToFree / BIG_DATA_SEQUENTIAL_TEST_COUNT);
+    printf("-----------------------------------------------------------------------------\n\n");
+
+    freeBlock(allocator, arrays);
+}
+
+void testWithBigDataRandom(Allocator* allocator) {
+    printf("-----------------------------------------------------------------------------\n");
+    printf("Testing on data betwen 256 and 2048 bytes. With probability 1/8 5 random elements are removed.\nTotal number of tests: %d\n\n", BIG_DATA_RANDOM_TEST_COUNT);
+    srand(time(NULL));
+
+    size_t totalRequested = 0;
+    size_t totalAllocated = 0;
+    size_t totalTimeToAllocate = 0;
+    size_t totalTimeToFree = 0;
+
+    size_t testVariable = 0;
+
+    char** arrays = allocBlock(allocator, sizeof(char*) * BIG_DATA_RANDOM_ARRAY_SIZE);
+    for (size_t i = 0; i < BIG_DATA_RANDOM_ARRAY_SIZE; ++i) {
+        arrays[i] = NULL;
+    }
+
+    #ifdef INFO
+    printf("First block length: %zu\n", allocator->firstFreeBLock->blockSize);
+    #endif
+
+    for (size_t iteration = 0; iteration < MEDIUM_DATA_RANDOM_TEST_COUNT; ++iteration) {
+
+        #ifdef INFO
+        printf("Iteration = %zu\n", iteration);
+        #endif
+
+        size_t startAllocatingTime = getMicrotime();
+        size_t timeToFreeWhileAllocating = 0;
+
+        // Выделяем
+        for (size_t i = 0; i < BIG_DATA_RANDOM_ARRAY_SIZE; ++i) {
+
+            #ifdef INFO
+            printf("Allocating. I = %zu\n", i);
+            #endif
+
+            size_t currentSize = sizeof(char) * ((rand() % (2048 - 255)) + 256);
+            arrays[i] = allocBlock(allocator, currentSize);
+
+            arrays[i][0] = (i + currentSize) % 10; // Просто заполняем, чтобы компилятор ничего не оптимизировал
+            testVariable += arrays[i][0];
+
+            totalRequested += currentSize;
+            totalAllocated += getBlockLengthByGivenMemory(arrays[i]) + sizeof(BlockInfo);
+
+            // С вероятностью 1 / 8 будем очищать 5 элементов
+            if (currentSize <= 224 + 256) {
+
+                size_t timeForFreeRandom = getMicrotime();
+
+                for (size_t j = 0; j < 5; ++j) {
+                    size_t indexToDelete = rand() % (i + 1);
+                    if (arrays[indexToDelete]) {
+                        
+                        #ifdef INFO
+                        printf("Free. I = %zu\n", indexToDelete);
+                        #endif
+
+                        freeBlock(allocator, arrays[indexToDelete]);
+                        arrays[indexToDelete] = NULL;
+                    }
+                }
+
+                size_t currentMicroseconds = getMicrotime();
+
+                timeToFreeWhileAllocating += (currentMicroseconds - timeForFreeRandom);
+                totalTimeToFree += (currentMicroseconds - timeForFreeRandom);
+            }
+        }
+
+        totalTimeToAllocate += (getMicrotime() - startAllocatingTime - timeToFreeWhileAllocating);
+
+        size_t startFreeTime = getMicrotime();
+
+        // Освобождаем остатки памяти
+        for (size_t i = 0; i < BIG_DATA_RANDOM_ARRAY_SIZE; ++i) {
+            if (arrays[i]) {
+
+                #ifdef INFO
+                printf("Free. I = %zu\n", i);
+                #endif
+                
+                freeBlock(allocator, arrays[i]);
+                arrays[i] = NULL;
+            }
+        }
+
+        totalTimeToFree += (getMicrotime() - startFreeTime);
+    }
+
+    printf("Total memory requested: %zu\n", totalRequested);
+    printf("Total memory allocated: %zu\n", totalAllocated);
+    printf("Microseconds to allocate: %zu\n", totalTimeToAllocate);
+    printf("Microseconds to free: %zu\n\n", totalTimeToFree);
+
+    printf("Average requested memory: %Lf\n", (long double)totalRequested / BIG_DATA_RANDOM_TEST_COUNT);
+    printf("Average allocated memory: %Lf\n", (long double)totalAllocated / BIG_DATA_RANDOM_TEST_COUNT);
+    printf("Average microseconds to allocate: %Lf\n", (long double)totalTimeToAllocate / BIG_DATA_RANDOM_TEST_COUNT);
+    printf("Average microseconds to free: %Lf\n", (long double)totalTimeToFree / BIG_DATA_RANDOM_TEST_COUNT);
+    printf("-----------------------------------------------------------------------------\n\n");
+
+    freeBlock(allocator, arrays);
 }

@@ -26,9 +26,11 @@ Allocator* createMemoryAllocator(size_t memorySize) {
     memorySize += ALIGN_BY;
     memorySize = align(memorySize); // Выравниваем саму память
     uint8_t* memory = malloc(memorySize); // malloc выравнивает память по 8 (или 16 или 32...)
-#ifdef INFO
+
+    #ifdef INFO
     printf("ALLOCATED TOTAL %zu\n", memorySize);
-#endif
+    #endif
+
     if (memory == NULL) {
         fprintf(stderr, "Can't allocate memory\n");
         exit(1);
@@ -101,7 +103,7 @@ void* allocBlock(Allocator* allocator, size_t requestedMemory) {
         } else {
             bestPrevBlock->nextBlock = newBlock;
         }
-    } else { // не хватило памяти под 
+    } else { // не хватило памяти под следующий блок
         setBlockOccupied(bestBlock);
         if (bestPrevBlock == NULL) {
             allocator->firstFreeBLock = bestBlock->nextBlock;
@@ -128,15 +130,13 @@ void freeBlock(Allocator* allocator, void* memoryBlock) {
         exit(1);
     }
 
-    
-
     // Надо добавить блок в самое начало
     if (blockForFree < currentBlock || currentBlock == NULL) {
         blockForFree->nextBlock = currentBlock;
         setBlockFree(blockForFree);
         allocator->firstFreeBLock = blockForFree;
     } else { // Блок будет находиться не в начале
-        while (currentBlock->nextBlock < blockForFree && currentBlock->nextBlock != NULL) {
+        while (currentBlock->nextBlock < blockForFree && resetToNormalPointer(currentBlock->nextBlock) != NULL) {
             currentBlock = resetToNormalPointer(currentBlock->nextBlock);
         }
         blockForFree->nextBlock = resetToNormalPointer(currentBlock->nextBlock);

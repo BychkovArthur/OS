@@ -15,7 +15,13 @@ void testLightDataRandom(Allocator*);
 void testWithMediumDataSequential(Allocator*);
 
 // Тестирование на выделение с одновременным освобождением на данных от 16 до 256 байт
-void testLightDataRandom(Allocator*);
+void testWithMediumDataRandom(Allocator*);
+
+// Тестирование на данных от 256, до 2048 байт. Последовательное выделение и освобождение
+void testWithBigDataSequential(Allocator*);
+
+// Тестирование на выделение с одновременным освобождением на данных от 256, до 2048 байт
+void testWithBigDataRandom(Allocator*);
 
 
 #endif // __TEST_FUNCTIONS__
