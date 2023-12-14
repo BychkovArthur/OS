@@ -26,7 +26,9 @@ Allocator* createMemoryAllocator(size_t memorySize) {
     memorySize += ALIGN_BY;
     memorySize = align(memorySize); // Выравниваем саму память
     uint8_t* memory = malloc(memorySize); // malloc выравнивает память по 8 (или 16 или 32...)
+#ifdef INFO
     printf("ALLOCATED TOTAL %zu\n", memorySize);
+#endif
     if (memory == NULL) {
         fprintf(stderr, "Can't allocate memory\n");
         exit(1);
