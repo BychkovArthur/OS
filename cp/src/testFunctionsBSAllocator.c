@@ -1,12 +1,13 @@
-#include "../include/testFunctionsRMAllocator.h"
+#include "../include/testFunctionsBSAllocator.h"
 
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>
 #include <sys/time.h>
+#include <stdlib.h>
 
 #include "../include/testSettings.h"
-#include "../include/resourceMapAllocator.h"
+#include "../include/buddySystemAllocator.h"
 
 size_t getMicrotime() {
 	struct timeval currentTime;
@@ -50,7 +51,7 @@ void testWithLightDataSequential(Allocator* allocator) {
             testVariable += arrays[i][0];
 
             totalRequested += currentSize;
-            totalAllocated += getBlockLengthByGivenMemory(arrays[i]) + sizeof(BlockInfo);
+            totalAllocated += ((BlockInfo*)((uint8_t*)arrays[i] - sizeof(BlockInfo)))->size;
         }
 
         // Добавляем время необходимое для выделения памяти
@@ -102,10 +103,6 @@ void testLightDataRandom(Allocator* allocator) {
         arrays[i] = NULL;
     }
 
-    #ifdef INFO
-    printf("First block length: %zu\n", allocator->firstFreeBLock->blockSize);
-    #endif
-
     for (size_t iteration = 0; iteration < LIGHT_DATA_RANDOM_TEST_COUNT; ++iteration) {
 
         #ifdef INFO
@@ -129,7 +126,7 @@ void testLightDataRandom(Allocator* allocator) {
             testVariable += arrays[i][0];
 
             totalRequested += currentSize;
-            totalAllocated += getBlockLengthByGivenMemory(arrays[i]) + sizeof(BlockInfo);
+            totalAllocated += ((BlockInfo*)((uint8_t*)arrays[i] - sizeof(BlockInfo)))->size;
 
             // С вероятностью 1 / 8 будем очищать 5 элементов
             if (currentSize <= 2) {
@@ -228,7 +225,7 @@ void testWithMediumDataSequential(Allocator* allocator) {
             testVariable += arrays[i][0];
 
             totalRequested += currentSize;
-            totalAllocated += getBlockLengthByGivenMemory(arrays[i]) + sizeof(BlockInfo);
+            totalAllocated += ((BlockInfo*)((uint8_t*)arrays[i] - sizeof(BlockInfo)))->size;
         }
 
         // Добавляем время необходимое для выделения памяти
@@ -280,10 +277,6 @@ void testWithMediumDataRandom(Allocator* allocator) {
         arrays[i] = NULL;
     }
 
-    #ifdef INFO
-    printf("First block length: %zu\n", allocator->firstFreeBLock->blockSize);
-    #endif
-
     for (size_t iteration = 0; iteration < MEDIUM_DATA_RANDOM_TEST_COUNT; ++iteration) {
 
         #ifdef INFO
@@ -307,7 +300,7 @@ void testWithMediumDataRandom(Allocator* allocator) {
             testVariable += arrays[i][0];
 
             totalRequested += currentSize;
-            totalAllocated += getBlockLengthByGivenMemory(arrays[i]) + sizeof(BlockInfo);
+            totalAllocated += ((BlockInfo*)((uint8_t*)arrays[i] - sizeof(BlockInfo)))->size;
 
             // С вероятностью 1 / 8 будем очищать 5 элементов
             if (currentSize <= 46) {
@@ -406,7 +399,11 @@ void testWithBigDataSequential(Allocator* allocator) {
             testVariable += arrays[i][0];
 
             totalRequested += currentSize;
-            totalAllocated += getBlockLengthByGivenMemory(arrays[i]) + sizeof(BlockInfo);
+            totalAllocated += ((BlockInfo*)((uint8_t*)arrays[i] - sizeof(BlockInfo)))->size;
+
+            #ifdef INFO
+            printf("Total allocated: %zu\n", totalAllocated);
+            #endif
         }
 
         // Добавляем время необходимое для выделения памяти
@@ -458,10 +455,6 @@ void testWithBigDataRandom(Allocator* allocator) {
         arrays[i] = NULL;
     }
 
-    #ifdef INFO
-    printf("First block length: %zu\n", allocator->firstFreeBLock->blockSize);
-    #endif
-
     for (size_t iteration = 0; iteration < MEDIUM_DATA_RANDOM_TEST_COUNT; ++iteration) {
 
         #ifdef INFO
@@ -485,7 +478,7 @@ void testWithBigDataRandom(Allocator* allocator) {
             testVariable += arrays[i][0];
 
             totalRequested += currentSize;
-            totalAllocated += getBlockLengthByGivenMemory(arrays[i]) + sizeof(BlockInfo);
+            totalAllocated += ((BlockInfo*)((uint8_t*)arrays[i] - sizeof(BlockInfo)))->size;
 
             // С вероятностью 1 / 8 будем очищать 5 элементов
             if (currentSize <= 224 + 256) {

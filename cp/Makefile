@@ -1,4 +1,4 @@
-.PHONY: clean test1 test2 run1 run2
+.PHONY: clean test1 test2 test1I test2I run1 run2
 
 SRC=./src
 BUILD=./build
@@ -15,11 +15,11 @@ test1: clean $(SRC)/resourceMapAllocatorTest.c $(SRC)/resourceMapAllocator.c $(S
 run1:
 	$(BUILD)/test1_exe
 
-test2I: clean $(SRC)/buddySystemAllocatorTest.c $(SRC)/buddySystemAllocator.c $(SRC)/buddySystemLinkedList.c
-	$(CC) $(FLAGS) $(SRC)/buddySystemAllocatorTest.c $(SRC)/buddySystemAllocator.c $(SRC)/buddySystemLinkedList.c -DINFO -o $(BUILD)/test2_exe
+test2I: clean $(SRC)/buddySystemAllocatorTest.c $(SRC)/buddySystemAllocator.c $(SRC)/buddySystemLinkedList.c $(SRC)/testFunctionsBSAllocator.c
+	$(CC) $(FLAGS) $(SRC)/buddySystemAllocatorTest.c $(SRC)/buddySystemAllocator.c $(SRC)/buddySystemLinkedList.c $(SRC)/testFunctionsBSAllocator.c -DINFO -o $(BUILD)/test2_exe
 
-test2: clean $(SRC)/buddySystemAllocatorTest.c $(SRC)/buddySystemAllocator.c $(SRC)/buddySystemLinkedList.c
-	$(CC) $(FLAGS) $(SRC)/buddySystemAllocatorTest.c $(SRC)/buddySystemAllocator.c $(SRC)/buddySystemLinkedList.c -o $(BUILD)/test2_exe
+test2: clean $(SRC)/buddySystemAllocatorTest.c $(SRC)/buddySystemAllocator.c $(SRC)/buddySystemLinkedList.c $(SRC)/testFunctionsBSAllocator.c
+	$(CC) $(FLAGS) $(SRC)/buddySystemAllocatorTest.c $(SRC)/buddySystemAllocator.c $(SRC)/buddySystemLinkedList.c $(SRC)/testFunctionsBSAllocator.c -o $(BUILD)/test2_exe
 
 run2:
 	$(BUILD)/test2_exe

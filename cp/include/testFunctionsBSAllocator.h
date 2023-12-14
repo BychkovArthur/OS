@@ -1,7 +1,7 @@
-#ifndef __TEST_FUNCTIONS_RM__
-#define __TEST_FUNCTIONS_RM__
+#ifndef __TEST_FUNCTIONS__
+#define __TEST_FUNCTIONS__
 
-#include "../include/resourceMapAllocator.h"
+#include "../include/buddySystemAllocator.h"
 
 size_t getMicrotime();
 
@@ -24,4 +24,4 @@ void testWithBigDataSequential(Allocator*);
 void testWithBigDataRandom(Allocator*);
 
 
-#endif // __TEST_FUNCTIONS_RM__
+#endif // __TEST_FUNCTIONS__

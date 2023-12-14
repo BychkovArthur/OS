@@ -6,20 +6,7 @@
 
 #include "../include/buddySystemLinkedList.h"
 
-// TODO:
-// - Проверка на уничтожение верного блока
-
 BlockInfo* blocks[MAX_POWER_OF_TWO - MIN_POWER_OF_TWO + 1];
-// size_t powersOfTwo[MAX_POWER_OF_TWO + 1];
-// size_t valuesOfPowerOfTwo[MAX_POWER_OF_TWO + 1];
-
-// void fillPowersOfTwo() {
-//     size_t power = 1;
-//     for (size_t i = 0; i < MAX_POWER_OF_TWO + 1; ++i) {
-//         powersOfTwo[i] = power;
-//         power <<= 1;
-//     }
-// }
 
 void printBlocks(Allocator* allocator) {
     for (int i = 0; i < 10; ++i) {
@@ -60,8 +47,6 @@ void initArrayOfBlocks() {
 }
 
 Allocator* createMemoryAllocator(size_t memorySize) {
-    // fillPowersOfTwo();
-    // printf("%zu\n", powersOfTwo[5]);
     if (memorySize == 0) {
         fprintf(stderr, "Invalid memory size 0\n");
         exit(1);
@@ -122,6 +107,13 @@ void* allocBlock(Allocator* allocator, size_t blockSize) {
     }
 
     if (firstGoodBlockID == (size_t)-1) {
+        
+        #ifdef INFO
+        for (int i = 0; i <= MAX_POWER_OF_TWO - MIN_POWER_OF_TWO; ++i) {
+            printf("I = %d: P = %p\n", i, (void*)blocks[i]);
+        }
+        #endif
+
         fprintf(stderr, "Can't allocate memory\n");
         exit(1);
     }
