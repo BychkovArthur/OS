@@ -3,17 +3,17 @@
 
 int main() {
 
-    // // Testing on light data
-    // Allocator* allocatorLight = createMemoryAllocator(40000000);
-    // testWithLightDataSequential(allocatorLight);
-    // testLightDataRandom(allocatorLight);
-    // destroyMemoryAllocator(allocatorLight);
+    // Testing on light data
+    Allocator* allocatorLight = createMemoryAllocator(40000000);
+    testWithLightDataSequential(allocatorLight);
+    testLightDataRandom(allocatorLight);
+    destroyMemoryAllocator(allocatorLight);
 
-    // // Testing on medium data
-    // Allocator* allocatorMedium = createMemoryAllocator(600000000);
-    // testWithMediumDataSequential(allocatorMedium);
-    // testWithMediumDataRandom(allocatorMedium);
-    // destroyMemoryAllocator(allocatorMedium);
+    // Testing on medium data
+    Allocator* allocatorMedium = createMemoryAllocator(600000000);
+    testWithMediumDataSequential(allocatorMedium);
+    testWithMediumDataRandom(allocatorMedium);
+    destroyMemoryAllocator(allocatorMedium);
 
     // Раньше у меня размеры всех блоков были одинаковые (по 32 байта, и следовательно первым подходящим был самый первый блок)
     // Теперь блоки имею разную длину, и следовательно довольно вероятно, что не найдется блока нужного размера и придется разместить новый болк в конце
