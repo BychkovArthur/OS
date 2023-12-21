@@ -1,6 +1,6 @@
 .vscode
 *.out
 */build/*
-!*/build/.gitignore
+!*/build/.gitkeep
 *exe
 *.so
