@@ -3,6 +3,12 @@
         "parallelmergesort.h": "c",
         "mergesort.h": "c",
         "functions.h": "c",
-        "time.h": "c"
+        "time.h": "c",
+        "mylib1.h": "c",
+        "cstdint": "c",
+        "resourcemapallocator.h": "c",
+        "random": "c",
+        "testfunctionsrmallocator.h": "c",
+        "testsettings.h": "c"
     }
 }
