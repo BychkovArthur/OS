@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Установка флагов для компиляции
-add_compile_options(-g -rdynamic)
+add_compile_options(-g -rdynamic -Wall -Werror -Wextra -Wpedantic)
 
 # Настройка переменных для папок
 set(INCLUDE_DIR include)
@@ -26,10 +26,10 @@ add_library(${CMAKE_PROJECT_NAME}_lib ${SOURCES})
 
 # Делаем исполняемый файл, в котором просто будем спрашивать пользователя входные данные
 add_executable(server_exe ${SOURCE_DIR}/server.cpp)
-add_executable(client_exe ${SOURCE_DIR}/client.cpp)
+add_executable(worker_exe ${SOURCE_DIR}/worker.cpp)
 
 # "Привязываем" (линкуем) бинарник main.cpp с библиотекой, в которой расположена функция
 # find cppzmq wrapper, installed by make of cppzmq
 find_package(cppzmq)
 target_link_libraries(server_exe PRIVATE ${CMAKE_PROJECT_NAME}_lib cppzmq)
-target_link_libraries(client_exe PRIVATE ${CMAKE_PROJECT_NAME}_lib cppzmq)
+target_link_libraries(worker_exe PRIVATE ${CMAKE_PROJECT_NAME}_lib cppzmq)

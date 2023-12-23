@@ -1,34 +1,39 @@
 #include <iostream>
-#include <zmq_addon.hpp>
-#include <zmq.hpp>
 
 #include "definitions.hpp"
 #include "functions.hpp"
 
-using namespace std;
-
 int main() {
-    zmq::context_t context;
+    Command command;
+    // bool waitForNewCommand = true;
 
-    zmq::socket_t socket(context, zmq::socket_type::rep);
-    socket.bind(getAddres(MIN_DYNAMIC_PORT + 1));
+    zmq::context_t context1;
+    zmq::context_t context2;
 
-    for (size_t i = 0; i < 5; ++i) {
-        zmq::message_t messageFromClient;
+    zmq::socket_t pullReplySocket(context1, zmq::socket_type::pull);
+    zmq::socket_t pushRequestSocket(context2, zmq::socket_type::push);
+    pullReplySocket.bind(getAddres(MIN_DYNAMIC_PORT + 0));
+    pushRequestSocket.bind(getAddres(MIN_DYNAMIC_PORT + 1));
 
-        socket.recv(messageFromClient, zmq::recv_flags::none);
+    // while (waitForNewCommand) {
+        command = readCommand();
 
-        size_t dataFromClient = *messageFromClient.data<size_t>();
-        size_t dataForClient = 2 * dataFromClient;
-        std::cout << "Server get from client: " << dataFromClient << std::endl;
-        std::cout << "Server sending " << dataForClient << " to client" << std::endl;
-
-        std::cout << "Complex calculations...." << std::endl;
-        sleep(3);
-
-        zmq::message_t messageForClient(&dataForClient, sizeof(size_t));
-        socket.send(messageForClient, zmq::send_flags::none);
-    }
-    socket.close();
+        switch (command.operationType) {
+        case OperationType::QUIT:
+            // waitForNewCommand = false;
+            break;
+        case OperationType::EXEC:
+            std::cout << "Exec..." << std::endl;
+            pushMessage(pushRequestSocket, command);
+            break;
+        case OperationType::CREATE:
+            pushMessage(pushRequestSocket, command);
+            break;
+        case OperationType::PING:
+            pushMessage(pushRequestSocket, command);
+            break;
+        }
+    // }
+    
     return 0;
 }

@@ -3,8 +3,8 @@ BUILD=./build
 build: clean
 	cd $(BUILD); cmake ..; make all;
 
-client:
-	$(BUILD)/client_exe
+worker:
+	$(BUILD)/worker_exe
 
 server:
 	$(BUILD)/server_exe
