@@ -1,6 +1,8 @@
 #include <iostream>
 #include <zmq_addon.hpp>
 #include <zmq.hpp>
+#include <thread>
+#include <chrono>
 
 #include "definitions.hpp"
 #include "functions.hpp"
@@ -38,6 +40,16 @@ pushReply         pullReply
 pullReply старшего
 */
 
+void getReply() {
+    while (true) {
+        zmq::message_t replyFromWorker(sizeof(size_t));
+        Reply reply = pullReply(pullReplySocket);
+        pushReply(pushReplySocket, reply);
+        // pullReplySocket.recv(replyFromWorker, zmq::recv_flags::none);
+        // pushReplySocket.send(replyFromWorker, zmq::send_flags::none);
+    }
+}
+
 int main(int argc, char* argv[]) {
 
     if (argc != 3) {
@@ -66,12 +78,19 @@ int main(int argc, char* argv[]) {
     std::cout << "Рабочий считывает reply из" <<  currentPort << std::endl;
     std::cout << "Рабочий отправляет reply в" <<  currentPort - 2 << std::endl;
 
+    std::thread replyThread(getReply);
+
     while (true) {
-        Command command = pullMessage(pullRequestSocket);
-        if (command.id == nodeId) {
-            std::cout << command.id << " " << (size_t)command.operationType << " " << (size_t)command.subcommand << std::endl;
+        Request request = pullRequest(pullRequestSocket);
+        if (request.id == nodeId) {
+            Reply reply {
+                request.operationType,
+                request.id * request.id,
+            };
+            request.id *= request.id;
+            pushReply(pushReplySocket, reply);
         } else {
-            pushMessage(pushRequestSocket, command);
+            pushRequest(pushRequestSocket, request);
         }
 
     }

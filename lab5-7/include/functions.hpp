@@ -8,16 +8,17 @@
 #include "definitions.hpp"
 
 std::string getAddres(size_t);
-void validateOperationType(Command&, std::string&);
-void validateId(Command&, ssize_t);
-void validateSubcommand(Command&, std::string&);
-Command readCommand();
+void validateOperationType(Request&, std::string&);
+void validateId(Request&, ssize_t);
+void validateSubrequest(Request&, std::string&);
+Request readRequest();
 
-void pushMessage(zmq::socket_t&, Command&);
-Command pullMessage(zmq::socket_t&);
+void pushRequest(zmq::socket_t& socket, Request& request);
+void pushReply(zmq::socket_t& socket, Reply& request);
+Reply pullReply(zmq::socket_t& socket);
+Request pullRequest(zmq::socket_t& socket);
 
 pid_t createNewNode(std::unordered_map<ssize_t, std::pair<pid_t, size_t>>&, ssize_t, size_t);
-
-void updateNodeMap(std::unordered_map<ssize_t, std::pair<pid_t, size_t>>&, size_t&, Command&);
+void updateNodeMap(std::unordered_map<ssize_t, std::pair<pid_t, size_t>>&, size_t&, Request&);
 
 void killWorkers(std::unordered_map<ssize_t, std::pair<pid_t, size_t>>&);

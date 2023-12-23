@@ -9,55 +9,55 @@ std::string getAddres(size_t port) {
 
 
 // MESSAGE VALIDATOR --------------------------------------------------------------
-void validateOperationType(Command& command, std::string& operationType) {
+void validateOperationType(Request& request, std::string& operationType) {
     if (operationType == "quit") {
-        command.operationType = OperationType::QUIT;
+        request.operationType = OperationType::QUIT;
     } else if (operationType == "create") {
-        command.operationType = OperationType::CREATE;
+        request.operationType = OperationType::CREATE;
     } else if (operationType == "exec") {
-        command.operationType = OperationType::EXEC;
+        request.operationType = OperationType::EXEC;
     } else if (operationType == "ping") {
-        command.operationType = OperationType::PING;
+        request.operationType = OperationType::PING;
     } else {
         throw std::invalid_argument("Invalid operation");
     }
 }
-void validateId(Command& command, ssize_t id) {
+void validateId(Request& request, ssize_t id) {
     if (id < 0) {
         throw std::invalid_argument("Invalid worker node id");
     }
-    command.id = id;
+    request.id = id;
 }
-void validateSubcommand(Command& command, std::string& timerSubcommand) {
+void validateSubrequest(Request& request, std::string& timerSubrequest) {
     using std::invalid_argument;
-    if (command.operationType == OperationType::PING && !timerSubcommand.empty()) {
+    if (request.operationType == OperationType::PING && !timerSubrequest.empty()) {
         throw invalid_argument("Ping can't accept third argument");
-    } else if (command.operationType == OperationType::CREATE && timerSubcommand != "-1") {
+    } else if (request.operationType == OperationType::CREATE && timerSubrequest != "-1") {
         throw invalid_argument("Create can push only in end");
-    } else if (command.operationType == OperationType::PING || command.operationType == OperationType::CREATE) {
-        command.subcommand = TimerSubcommand::NOTHING;
+    } else if (request.operationType == OperationType::PING || request.operationType == OperationType::CREATE) {
+        request.subrequest = TimerSubrequest::NOTHING;
     }
 
-    if (command.operationType == OperationType::EXEC && timerSubcommand == "start") {
-        command.subcommand = TimerSubcommand::START;
-    } else if (command.operationType == OperationType::EXEC && timerSubcommand == "stop") {
-        command.subcommand = TimerSubcommand::STOP;
-    } else if (command.operationType == OperationType::EXEC && timerSubcommand == "time") {
-        command.subcommand = TimerSubcommand::TIME;
-    } else if (command.operationType == OperationType::EXEC) {
-        throw invalid_argument("Invalid subcommand");
+    if (request.operationType == OperationType::EXEC && timerSubrequest == "start") {
+        request.subrequest = TimerSubrequest::START;
+    } else if (request.operationType == OperationType::EXEC && timerSubrequest == "stop") {
+        request.subrequest = TimerSubrequest::STOP;
+    } else if (request.operationType == OperationType::EXEC && timerSubrequest == "time") {
+        request.subrequest = TimerSubrequest::TIME;
+    } else if (request.operationType == OperationType::EXEC) {
+        throw invalid_argument("Invalid subrequest");
     }
 }
 
-Command readCommand() {
+Request readRequest() {
     using std::cout, std::cin, std::endl, std::string, std::stringstream, std::getline, std::invalid_argument;
 
     string operation;
-    Command command;
+    Request request;
 
     string operationType;
     size_t id = -1;
-    string timerSubcommand;
+    string timerSubrequest;
 
     cout << ">>> ";
     getline(cin, operation);
@@ -66,28 +66,28 @@ Command readCommand() {
     stringstream ss(operation);
 
     ss >> operationType;
-    validateOperationType(command, operationType);
+    validateOperationType(request, operationType);
 
-    if (command.operationType == OperationType::QUIT) {
+    if (request.operationType == OperationType::QUIT) {
         if (ss >> operationType) {
             throw invalid_argument("Invalid input");
         }
-        command.id = -1;
-        command.subcommand = TimerSubcommand::NOTHING;
-        return command;
+        request.id = -1;
+        request.subrequest = TimerSubrequest::NOTHING;
+        return request;
     }
 
     ss >> id;
-    validateId(command, id);
-    ss >> timerSubcommand;
-    validateSubcommand(command, timerSubcommand);
+    validateId(request, id);
+    ss >> timerSubrequest;
+    validateSubrequest(request, timerSubrequest);
 
     // Пришла еще одно строка
-    if ((ss >> timerSubcommand)) {
+    if ((ss >> timerSubrequest)) {
         throw invalid_argument("Invalid input");
     }
 
-    return command;
+    return request;
 }
 
 // MESSAGE VALIDATOR --------------------------------------------------------------
@@ -105,8 +105,8 @@ Command readCommand() {
 
 // MESSAGE SENDER/PULLER --------------------------------------------------------------
 
-void pushMessage(zmq::socket_t& socket, Command& command) {
-    zmq::message_t message(&command, sizeof(Command));
+void pushRequest(zmq::socket_t& socket, Request& request) {
+    zmq::message_t message(&request, sizeof(Request));
 
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Wunused-result"
@@ -114,15 +114,35 @@ void pushMessage(zmq::socket_t& socket, Command& command) {
     #pragma GCC diagnostic pop
 }
 
-Command pullMessage(zmq::socket_t& socket) {
-    zmq::message_t message(sizeof(Command));
+void pushReply(zmq::socket_t& socket, Reply& reply) {
+    zmq::message_t message(&reply, sizeof(Reply));
+
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wunused-result"
+    socket.send(message, zmq::send_flags::none);
+    #pragma GCC diagnostic pop
+}
+
+Reply pullReply(zmq::socket_t& socket) {
+    zmq::message_t message(sizeof(Reply));
 
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Wunused-result"
     socket.recv(message, zmq::recv_flags::none);
     #pragma GCC diagnostic pop
 
-    return *message.data<Command>();
+    return *message.data<Reply>();
+}
+
+Request pullRequest(zmq::socket_t& socket) {
+    zmq::message_t message(sizeof(Request));
+
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wunused-result"
+    socket.recv(message, zmq::recv_flags::none);
+    #pragma GCC diagnostic pop
+
+    return *message.data<Request>();
 }
 // MESSAGE SENDER/PULLER --------------------------------------------------------------
 
@@ -162,10 +182,10 @@ pid_t createNewNode(std::unordered_map<ssize_t, std::pair<pid_t, size_t>>& nodes
     return processId;
 }
 
-void updateNodeMap(std::unordered_map<ssize_t, std::pair<pid_t, size_t>>& nodes, size_t& currentPort, Command& command) {
-    pid_t newWorkerPid = createNewNode(nodes, command.id, currentPort);
+void updateNodeMap(std::unordered_map<ssize_t, std::pair<pid_t, size_t>>& nodes, size_t& currentPort, Request& request) {
+    pid_t newWorkerPid = createNewNode(nodes, request.id, currentPort);
     if (newWorkerPid != PID_FOR_ALREADY_EXIST_NODE) {
-        nodes[command.id] = std::pair<pid_t, size_t>{newWorkerPid, currentPort};
+        nodes[request.id] = std::pair<pid_t, size_t>{newWorkerPid, currentPort};
         currentPort += 2;
     }
 }

@@ -12,7 +12,7 @@ enum class OperationType {
     QUIT,
 };
 
-enum class TimerSubcommand {
+enum class TimerSubrequest {
     START,
     STOP,
     TIME,
@@ -26,8 +26,13 @@ enum class TimerSubcommand {
 И, только для комманды exec будет хранится тип подкомманды, в остальных NOTHING
 Для `create id -1` -1 хранить не будем
 */
-struct Command {
+struct Request {
     OperationType operationType;
     ssize_t id;
-    TimerSubcommand subcommand;
+    TimerSubrequest subrequest;
+};
+
+struct Reply {
+    OperationType operationType;
+    ssize_t result;
 };

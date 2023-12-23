@@ -1,15 +1,32 @@
 #include <iostream>
+#include <thread>
+#include <chrono>
 
 #include "definitions.hpp"
 #include "functions.hpp"
 
 
-// Добавить отчистку ресурсов после ошибки
+/*
+    TODO
+    - Сейчас у меня при выходе не дожидается ответа
+    - Добавить отчистку ресурсов после ошибки
+    - Валидация порта и nodeId (createNewNode)
+    - Нормальный путь сделать (createNewNode)
+*/
+
 zmq::context_t context1;
 zmq::context_t context2;
 
 zmq::socket_t pullReplySocket(context1, zmq::socket_type::pull);
 zmq::socket_t pushRequestSocket(context2, zmq::socket_type::push);
+
+
+void getReply() {
+    while (true) {
+        Reply data = pullReply(pullReplySocket);
+        std::cout << "Server: Answer: " << data.result << std::endl;
+    }
+}
 
 int main() {
     /*
@@ -19,8 +36,8 @@ int main() {
     std::unordered_map<ssize_t, std::pair<pid_t, size_t>> nodes;
 
     size_t currentPort = MIN_DYNAMIC_PORT + 20;
-    Command command;
-    bool waitForNewCommand = true;
+    Request request;
+    bool waitForNewRequest = true;
 
     pullReplySocket.bind(getAddres(currentPort + 0));
     pushRequestSocket.bind(getAddres(currentPort + 1));
@@ -30,26 +47,29 @@ int main() {
 
     currentPort += 2;
 
-    while (waitForNewCommand) {
-        command = readCommand();
+    std::thread replyThread(getReply);
 
-        switch (command.operationType) {
+    while (waitForNewRequest) {
+        request = readRequest();
+
+        switch (request.operationType) {
         case OperationType::QUIT:
-            waitForNewCommand = false;
+            waitForNewRequest = false;
             break;
         case OperationType::EXEC:
-            pushMessage(pushRequestSocket, command);
+            pushRequest(pushRequestSocket, request);
             break;
         case OperationType::CREATE:
             // мьютекс навесить
-            updateNodeMap(nodes, currentPort, command);
+            updateNodeMap(nodes, currentPort, request);
             break;
         case OperationType::PING:
-            pushMessage(pushRequestSocket, command);
+            // pushMessage(pushRequestSocket, request);
             break;
         }
     }
 
+    replyThread.detach();
     pullReplySocket.close();
     pushRequestSocket.close();
     killWorkers(nodes);
