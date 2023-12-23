@@ -16,14 +16,12 @@ zmq::socket_t pullReplySocket(context3, zmq::socket_type::pull);
 zmq::socket_t pushReplySocket(context4, zmq::socket_type::push);
 
 void signal_handler(int signal) {
-    std::cerr << "IM KILLED!!!" << std::endl;
     if (signal == SIGTERM) {
         pushRequestSocket.close();
         pullReplySocket.close();
     }
     exit(0);
 }
-
 
 /*
 pushRequest старшего
@@ -55,7 +53,6 @@ int main(int argc, char* argv[]) {
     ssize_t nodeId = (ssize_t)atoll(const_cast<char*>(argv[1]));
     size_t currentPort = (size_t)atoll(const_cast<char*>(argv[2]));
 
-    std::cout << "Создался worker с pid = " << getpid() << " workerID = " << nodeId << " port = " << currentPort << std::endl;
 
     pushReplySocket.connect(getAddres(currentPort - 2));
     pullRequestSocket.connect(getAddres(currentPort - 1));
@@ -63,14 +60,21 @@ int main(int argc, char* argv[]) {
     pushRequestSocket.bind(getAddres(currentPort + 1));
     pullReplySocket.bind(getAddres(currentPort + 0));
 
-    while (true) {
-        Command cmd = pullMessage(pullRequestSocket);
-        std::cout << cmd.id << " " << (size_t)cmd.operationType << " " << (size_t)cmd.subcommand << std::endl;
-    }
-    
-    
-    
+    std::cout << "Создался worker с pid = " << getpid() << " workerID = " << nodeId << std::endl;
+    std::cout << "Рабочий считывает request из" <<  currentPort - 1 << std::endl;
+    std::cout << "Рабочий отправляет request в" <<  currentPort + 1 << std::endl;
+    std::cout << "Рабочий считывает reply из" <<  currentPort << std::endl;
+    std::cout << "Рабочий отправляет reply в" <<  currentPort - 2 << std::endl;
 
+    while (true) {
+        Command command = pullMessage(pullRequestSocket);
+        if (command.id == nodeId) {
+            std::cout << command.id << " " << (size_t)command.operationType << " " << (size_t)command.subcommand << std::endl;
+        } else {
+            pushMessage(pushRequestSocket, command);
+        }
+
+    }
 
     return 0;
 }

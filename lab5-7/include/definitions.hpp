@@ -3,6 +3,7 @@
 #define MIN_DYNAMIC_PORT 49152
 #define MAX_PORT_LENGTH 5
 #define MAX_NODE_ID_LENGTH 5
+#define PID_FOR_ALREADY_EXIST_NODE -1
 
 enum class OperationType {
     CREATE,
