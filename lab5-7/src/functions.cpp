@@ -126,12 +126,15 @@ void pushReply(zmq::socket_t& socket, Reply& reply) {
 Reply pullReply(zmq::socket_t& socket) {
     zmq::message_t message(sizeof(Reply));
 
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wunused-result"
-    socket.recv(message, zmq::recv_flags::none);
-    #pragma GCC diagnostic pop
+    // #pragma GCC diagnostic push
+    // #pragma GCC diagnostic ignored "-Wunused-result"
+    auto reply = socket.recv(message, zmq::recv_flags::dontwait);
+    if (reply.has_value()) {
+        return *message.data<Reply>();
+    }
+    return Reply {OperationType::NOTHING, -1};
+    // #pragma GCC diagnostic pop
 
-    return *message.data<Reply>();
 }
 
 Request pullRequest(zmq::socket_t& socket) {

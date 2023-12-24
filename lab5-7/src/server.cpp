@@ -1,6 +1,7 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <semaphore>
 
 #include "definitions.hpp"
 #include "functions.hpp"
@@ -12,6 +13,8 @@
     - Добавить отчистку ресурсов после ошибки
     - Валидация порта и nodeId (createNewNode)
     - Нормальный путь сделать (createNewNode)
+    - У меня никак не соединяется поток в воркере.
+    - Добавить обработку, что сначала необходимо делать start, только потом stop
 */
 
 zmq::context_t context1;
@@ -20,12 +23,18 @@ zmq::context_t context2;
 zmq::socket_t pullReplySocket(context1, zmq::socket_type::pull);
 zmq::socket_t pushRequestSocket(context2, zmq::socket_type::push);
 
+bool waitForNewRequest = true;
+
+std::binary_semaphore endSemaphore(0);
 
 void getReply() {
-    while (true) {
+    while (waitForNewRequest) {
         Reply data = pullReply(pullReplySocket);
-        std::cout << "Server: Answer: " << data.result << std::endl;
+        if (data.operationType != OperationType::NOTHING) {
+            std::cout << "Server: Answer: " << data.result << std::endl;
+        }
     }
+    endSemaphore.release();
 }
 
 int main() {
@@ -35,9 +44,9 @@ int main() {
     */ 
     std::unordered_map<ssize_t, std::pair<pid_t, size_t>> nodes;
 
-    size_t currentPort = MIN_DYNAMIC_PORT + 20;
+    size_t currentPort = MIN_DYNAMIC_PORT + 170;
     Request request;
-    bool waitForNewRequest = true;
+    
 
     pullReplySocket.bind(getAddres(currentPort + 0));
     pushRequestSocket.bind(getAddres(currentPort + 1));
@@ -55,6 +64,7 @@ int main() {
         switch (request.operationType) {
         case OperationType::QUIT:
             waitForNewRequest = false;
+            endSemaphore.acquire();
             break;
         case OperationType::EXEC:
             pushRequest(pushRequestSocket, request);
@@ -66,10 +76,12 @@ int main() {
         case OperationType::PING:
             // pushMessage(pushRequestSocket, request);
             break;
+        case OperationType::NOTHING:
+            break;
         }
     }
 
-    replyThread.detach();
+    replyThread.join();
     pullReplySocket.close();
     pushRequestSocket.close();
     killWorkers(nodes);

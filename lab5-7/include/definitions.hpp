@@ -10,6 +10,7 @@ enum class OperationType {
     EXEC,
     PING,
     QUIT,
+    NOTHING,
 };
 
 enum class TimerSubrequest {
