@@ -19,21 +19,25 @@ void validateOperationType(Request& request, std::string& operationType) {
     } else if (operationType == "ping") {
         request.operationType = OperationType::PING;
     } else {
-        throw std::invalid_argument("Invalid operation");
+        // throw std::invalid_argument("Invalid operation");
+        std::cout << "Error: Invalid operation" << std::endl;
     }
 }
 void validateId(Request& request, ssize_t id) {
     if (id < 0) {
-        throw std::invalid_argument("Invalid worker node id");
+        // throw std::invalid_argument("Invalid worker node id");
+        std::cout << "Error: " << id << " : Invalid worker node id" << std::endl;
     }
     request.id = id;
 }
 void validateSubrequest(Request& request, std::string& timerSubrequest) {
     using std::invalid_argument;
     if (request.operationType == OperationType::PING && !timerSubrequest.empty()) {
-        throw invalid_argument("Ping can't accept third argument");
+        // throw invalid_argument("Ping can't accept third argument");
+        std::cout << "Error: Ping can't accept third argument" << std::endl;
     } else if (request.operationType == OperationType::CREATE && timerSubrequest != "-1") {
-        throw invalid_argument("Create can push only in end");
+        // throw invalid_argument("Create can push only in end");
+        std::cout << "Error: Create can push only in end" << std::endl;
     } else if (request.operationType == OperationType::PING || request.operationType == OperationType::CREATE) {
         request.subrequest = TimerSubrequest::NOTHING;
     }
@@ -45,7 +49,8 @@ void validateSubrequest(Request& request, std::string& timerSubrequest) {
     } else if (request.operationType == OperationType::EXEC && timerSubrequest == "time") {
         request.subrequest = TimerSubrequest::TIME;
     } else if (request.operationType == OperationType::EXEC) {
-        throw invalid_argument("Invalid subrequest");
+        // throw invalid_argument("Invalid subrequest");
+        std::cout << "Error: Invalid subrequest" << std::endl;
     }
 }
 
@@ -70,7 +75,8 @@ Request readRequest() {
 
     if (request.operationType == OperationType::QUIT) {
         if (ss >> operationType) {
-            throw invalid_argument("Invalid input");
+            // throw invalid_argument("Invalid input");
+            std::cout << "Error: Invalid input" << std::endl;
         }
         request.id = -1;
         request.subrequest = TimerSubrequest::NOTHING;
@@ -84,7 +90,8 @@ Request readRequest() {
 
     // Пришла еще одно строка
     if ((ss >> timerSubrequest)) {
-        throw invalid_argument("Invalid input");
+        // throw invalid_argument("Invalid input");
+        std::cout << "Error: Invalid input" << std::endl;
     }
 
     return request;
@@ -153,12 +160,27 @@ Request pullRequest(zmq::socket_t& socket) {
 
 
 // Валидация порта и nodeId
-pid_t createNewNode(std::unordered_map<ssize_t, std::pair<pid_t, size_t>>& nodes, ssize_t nodeId, size_t currentPort) {
+std::pair<pid_t, bool> createNewNode(std::unordered_map<ssize_t, std::pair<pid_t, size_t>>& nodes, ssize_t nodeId, size_t& currentPort) {
+    
+    bool replace = false;
+
     if (nodes.count(nodeId) > 0) {
         std::cout << "Error: Already exists" << std::endl;
-        return PID_FOR_ALREADY_EXIST_NODE;
+        return std::pair<pid_t, bool> {PID_FOR_ALREADY_EXIST_NODE, replace};
     }
     
+
+    size_t currentPortCopy = currentPort;
+    for (auto& node : nodes) {
+        if (!isProcessExists(node.second.first) && node.second.second != ALREADY_REPLACED) {
+            currentPortCopy = node.second.second;
+            std::cout << "I'm here!!!!!!!!!!" << currentPortCopy << std::endl;
+            node.second.second = ALREADY_REPLACED;
+            replace = true;
+            break;
+        }
+    }
+
     pid_t processId = fork();
     if (processId == -1) {
         perror("fork");
@@ -170,7 +192,7 @@ pid_t createNewNode(std::unordered_map<ssize_t, std::pair<pid_t, size_t>>& nodes
         char srtNodeId[MAX_NODE_ID_LENGTH + 1];
         char strCurrentPort[MAX_PORT_LENGTH + 1];
         sprintf(srtNodeId, "%zd", nodeId);
-        sprintf(strCurrentPort, "%zu", currentPort);
+        sprintf(strCurrentPort, "%zu", currentPortCopy);
         if (execl("./build/worker_exe", "./build/worker_exe", srtNodeId, strCurrentPort, NULL) == -1) {
             perror("Exec error (server)");
             exit(1);
@@ -178,19 +200,32 @@ pid_t createNewNode(std::unordered_map<ssize_t, std::pair<pid_t, size_t>>& nodes
     }
 
     std::cout << "Ok: " << processId << std::endl;
-    return processId;
+    return std::pair<pid_t, bool> {processId, replace};
 }
 
 void updateNodeMap(std::unordered_map<ssize_t, std::pair<pid_t, size_t>>& nodes, size_t& currentPort, Request& request) {
-    pid_t newWorkerPid = createNewNode(nodes, request.id, currentPort);
-    if (newWorkerPid != PID_FOR_ALREADY_EXIST_NODE) {
-        nodes[request.id] = std::pair<pid_t, size_t>{newWorkerPid, currentPort};
-        currentPort += 2;
+    std::cout << "Port before: " << currentPort << std::endl;
+    std::pair<pid_t, bool> newWorkerInfo = createNewNode(nodes, request.id, currentPort);
+    if (newWorkerInfo.first != PID_FOR_ALREADY_EXIST_NODE) {
+        nodes[request.id] = std::pair<pid_t, size_t>{newWorkerInfo.first, currentPort};
+
+        if (!newWorkerInfo.second) {
+            currentPort += 2;
+        }
     }
+    std::cout << "Port after: " << currentPort << std::endl;
 }
 
 void killWorkers(std::unordered_map<ssize_t, std::pair<pid_t, size_t>>& nodes) {
     for (auto worker : nodes) {
         kill(worker.second.first, SIGTERM);
     }
+}
+
+bool isProcessExists(pid_t pid) {
+    int errnoBefore = errno;
+    kill(pid, 0);
+    int newErrno = errno;
+    errno = errnoBefore;
+    return newErrno != ESRCH;
 }

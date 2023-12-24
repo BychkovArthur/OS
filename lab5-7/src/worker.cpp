@@ -85,8 +85,15 @@ int main(int argc, char* argv[]) {
         exit(1);
     }
 
+
     ssize_t nodeId = (ssize_t)atoll(const_cast<char*>(argv[1]));
     size_t currentPort = (size_t)atoll(const_cast<char*>(argv[2]));
+
+    std::cout << "Создался worker с pid = " << getpid() << " workerID = " << nodeId << std::endl;
+    std::cout << "Рабочий считывает request из" <<  currentPort - 1 << std::endl;
+    std::cout << "Рабочий отправляет request в" <<  currentPort + 1 << std::endl;
+    std::cout << "Рабочий считывает reply из" <<  currentPort << std::endl;
+    std::cout << "Рабочий отправляет reply в" <<  currentPort - 2 << std::endl;
 
     pushReplySocket.connect(getAddres(currentPort - 2));
     pullRequestSocket.connect(getAddres(currentPort - 1));
@@ -94,11 +101,6 @@ int main(int argc, char* argv[]) {
     pushRequestSocket.bind(getAddres(currentPort + 1));
     pullReplySocket.bind(getAddres(currentPort + 0));
 
-    std::cout << "Создался worker с pid = " << getpid() << " workerID = " << nodeId << std::endl;
-    std::cout << "Рабочий считывает request из" <<  currentPort - 1 << std::endl;
-    std::cout << "Рабочий отправляет request в" <<  currentPort + 1 << std::endl;
-    std::cout << "Рабочий считывает reply из" <<  currentPort << std::endl;
-    std::cout << "Рабочий отправляет reply в" <<  currentPort - 2 << std::endl;
 
     std::thread replyThread(getReply);
 

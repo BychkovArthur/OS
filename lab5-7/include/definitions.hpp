@@ -4,6 +4,7 @@
 #define MAX_PORT_LENGTH 5
 #define MAX_NODE_ID_LENGTH 5
 #define PID_FOR_ALREADY_EXIST_NODE -1
+#define ALREADY_REPLACED 0
 
 enum class OperationType {
     CREATE,

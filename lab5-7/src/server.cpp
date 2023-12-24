@@ -2,8 +2,7 @@
 #include <thread>
 #include <chrono>
 #include <semaphore>
-#include <cerrno>
-#include <sys/wait.h>
+
 
 #include "definitions.hpp"
 #include "functions.hpp"
@@ -15,6 +14,7 @@
     - Валидация порта и nodeId (createNewNode)
     - Нормальный путь сделать (createNewNode)
     - У меня никак не соединяется поток в воркере.
+    - При ошибке все по пизде
 */
 
 zmq::context_t context1;
@@ -47,14 +47,6 @@ void getReply() {
     endSemaphore.release();
 }
 
-bool isProcessExists(pid_t pid) {
-    int errnoBefore = errno;
-    kill(pid, 0);
-    int newErrno = errno;
-    errno = errnoBefore;
-    return newErrno != ESRCH;
-}
-
 void updateWorkersCount(std::unordered_map<ssize_t, std::pair<pid_t, size_t>>& nodes, size_t& workersCount) {
     workersCount = 0;
     for (auto node : nodes) {
@@ -71,7 +63,7 @@ int main() {
     */ 
     std::unordered_map<ssize_t, std::pair<pid_t, size_t>> nodes;
 
-    size_t currentPort = MIN_DYNAMIC_PORT + 540;
+    size_t currentPort = MIN_DYNAMIC_PORT + 1040;
     Request request;
     
     pullReplySocket.bind(getAddres(currentPort + 0));
@@ -100,6 +92,8 @@ int main() {
         case OperationType::EXEC:
             if (nodes.count(request.id) == 0) {
                 std::cout << "Error: " << request.id << ": Not found" << std::endl;
+            } else if (!isProcessExists(nodes[request.id].first)){
+                std::cout << "Error: " << request.id << ": Node is unvaliable" << std::endl;
             } else {
                 pushRequest(pushRequestSocket, request);
             }
