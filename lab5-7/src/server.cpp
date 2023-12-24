@@ -15,6 +15,7 @@
     - Нормальный путь сделать (createNewNode)
     - У меня никак не соединяется поток в воркере.
     - При ошибке все по пизде
+    - Возможно, вычисления делать тоже в дргом потоке
 */
 
 zmq::context_t context1;
@@ -54,7 +55,6 @@ void updateWorkersCount(std::unordered_map<ssize_t, std::pair<pid_t, size_t>>& n
     }
 }
 
-
 int main() {
     size_t workerksCount = 0;
     /*
@@ -63,14 +63,11 @@ int main() {
     */ 
     std::unordered_map<ssize_t, std::pair<pid_t, size_t>> nodes;
 
-    size_t currentPort = MIN_DYNAMIC_PORT + 1040;
+    size_t currentPort = MIN_DYNAMIC_PORT;
     Request request;
     
     pullReplySocket.bind(getAddres(currentPort + 0));
     pushRequestSocket.bind(getAddres(currentPort + 1));
-
-    std::cout << "Сервер отправляет в " << currentPort + 1 << std::endl;
-    std::cout << "Сервер принимает из " << currentPort << std::endl;
 
     currentPort += 2;
 
@@ -80,7 +77,7 @@ int main() {
         request = readRequest();
         
         if (workerksCount && waitpid(-1, NULL, WNOHANG) == -1) {
-            perror("wait error (server)");
+            perror("Wait error (server)");
             exit(1);
         }
         updateWorkersCount(nodes, workerksCount);
@@ -107,7 +104,6 @@ int main() {
             if (nodes.count(request.id) == 0) {
                 std::cout << "Error: " << request.id << ": Not found" << std::endl;
             } else {
-                std::cout << "Pinging " << nodes[request.id].first << std::endl;
                 if (isProcessExists(nodes[request.id].first)) {
                     std::cout << "Ok: 1" << std::endl;
                 } else {

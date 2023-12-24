@@ -64,9 +64,7 @@ Request readRequest() {
     size_t id = -1;
     string timerSubrequest;
 
-    cout << ">>> ";
     getline(cin, operation);
-    cout << endl;
 
     stringstream ss(operation);
 
@@ -174,7 +172,6 @@ std::pair<pid_t, bool> createNewNode(std::unordered_map<ssize_t, std::pair<pid_t
     for (auto& node : nodes) {
         if (!isProcessExists(node.second.first) && node.second.second != ALREADY_REPLACED) {
             currentPortCopy = node.second.second;
-            std::cout << "I'm here!!!!!!!!!!" << currentPortCopy << std::endl;
             node.second.second = ALREADY_REPLACED;
             replace = true;
             break;
@@ -183,7 +180,7 @@ std::pair<pid_t, bool> createNewNode(std::unordered_map<ssize_t, std::pair<pid_t
 
     pid_t processId = fork();
     if (processId == -1) {
-        perror("fork");
+        perror("Fork error (server)");
         exit(1);
     }
 
@@ -204,7 +201,6 @@ std::pair<pid_t, bool> createNewNode(std::unordered_map<ssize_t, std::pair<pid_t
 }
 
 void updateNodeMap(std::unordered_map<ssize_t, std::pair<pid_t, size_t>>& nodes, size_t& currentPort, Request& request) {
-    std::cout << "Port before: " << currentPort << std::endl;
     std::pair<pid_t, bool> newWorkerInfo = createNewNode(nodes, request.id, currentPort);
     if (newWorkerInfo.first != PID_FOR_ALREADY_EXIST_NODE) {
         nodes[request.id] = std::pair<pid_t, size_t>{newWorkerInfo.first, currentPort};
@@ -213,7 +209,6 @@ void updateNodeMap(std::unordered_map<ssize_t, std::pair<pid_t, size_t>>& nodes,
             currentPort += 2;
         }
     }
-    std::cout << "Port after: " << currentPort << std::endl;
 }
 
 void killWorkers(std::unordered_map<ssize_t, std::pair<pid_t, size_t>>& nodes) {

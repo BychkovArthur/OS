@@ -24,7 +24,6 @@ bool processWorking = true;
 std::binary_semaphore killSemaphore(0);
 
 void signal_handler(int signal) {
-    std::cout << "Im killed" << std::endl;
     if (signal == SIGTERM) {
         processWorking = false;
         killSemaphore.acquire(); // Чтобы мы сначала вышли из цикла, и не было ошибок
@@ -85,15 +84,8 @@ int main(int argc, char* argv[]) {
         exit(1);
     }
 
-
     ssize_t nodeId = (ssize_t)atoll(const_cast<char*>(argv[1]));
     size_t currentPort = (size_t)atoll(const_cast<char*>(argv[2]));
-
-    std::cout << "Создался worker с pid = " << getpid() << " workerID = " << nodeId << std::endl;
-    std::cout << "Рабочий считывает request из" <<  currentPort - 1 << std::endl;
-    std::cout << "Рабочий отправляет request в" <<  currentPort + 1 << std::endl;
-    std::cout << "Рабочий считывает reply из" <<  currentPort << std::endl;
-    std::cout << "Рабочий отправляет reply в" <<  currentPort - 2 << std::endl;
 
     pushReplySocket.connect(getAddres(currentPort - 2));
     pullRequestSocket.connect(getAddres(currentPort - 1));
@@ -101,13 +93,11 @@ int main(int argc, char* argv[]) {
     pushRequestSocket.bind(getAddres(currentPort + 1));
     pullReplySocket.bind(getAddres(currentPort + 0));
 
-
     std::thread replyThread(getReply);
 
     while (true) {
         Request request = pullRequest(pullRequestSocket);
 
-        std::cout << "Iam " << getpid() << " получил " << request.id << std::endl;
         if (request.id == nodeId) { // Ответ 
 
             Reply reply;
@@ -131,15 +121,14 @@ int main(int argc, char* argv[]) {
                 reply.result = stopTime;
             } else if (request.subrequest == TimerSubrequest::TIME) {
                 reply.result = currentTime;
+                std::this_thread::sleep_for(std::chrono::seconds(15));
             }
-
             pushReply(pushReplySocket, reply);
 
         } else {
             pushRequest(pushRequestSocket, request);
         }
     }
-    
     
     return 0;
 }
