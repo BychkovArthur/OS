@@ -20,6 +20,11 @@ enum class TimerSubrequest {
     NOTHING,
 };
 
+enum class ErrorTypes {
+    STOP_BEFORE_START,
+    NO_ERRORS,
+};
+
 /*
 Структура комманды
 Сначала хранится тип команды
@@ -36,4 +41,7 @@ struct Request {
 struct Reply {
     OperationType operationType;
     ssize_t result;
+    ErrorTypes error;
+    ssize_t id;
+    TimerSubrequest subrequest;
 };

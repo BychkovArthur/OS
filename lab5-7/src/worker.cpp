@@ -24,6 +24,7 @@ bool processWorking = true;
 std::binary_semaphore killSemaphore(0);
 
 void signal_handler(int signal) {
+    std::cout << "Im killed" << std::endl;
     if (signal == SIGTERM) {
         processWorking = false;
         killSemaphore.acquire(); // Чтобы мы сначала вышли из цикла, и не было ошибок
@@ -56,7 +57,6 @@ void getReply() {
         Reply reply = pullReply(pullReplySocket);
         if (reply.operationType != OperationType::NOTHING) {
             pushReply(pushReplySocket, reply); 
-            std::cout << "HERE time2 = " << reply.result << std::endl;
         }
     }
     killSemaphore.release();
@@ -73,6 +73,7 @@ int main(int argc, char* argv[]) {
     ssize_t startTime;
     ssize_t stopTime;
     ssize_t currentTime = 0;
+    bool isTimerStarted = false;
 
     if (argc != 3) {
         std::cerr << "Invalid worker exec (worker)" << std::endl;
@@ -103,20 +104,30 @@ int main(int argc, char* argv[]) {
 
     while (true) {
         Request request = pullRequest(pullRequestSocket);
+
+        std::cout << "Iam " << getpid() << " получил " << request.id << std::endl;
         if (request.id == nodeId) { // Ответ 
 
             Reply reply;
             reply.operationType = request.operationType;
+            reply.error = ErrorTypes::NO_ERRORS;
+            reply.subrequest = request.subrequest;
+            reply.id = request.id;
 
             if (request.subrequest == TimerSubrequest::START) {
+                isTimerStarted = true;
                 startTime = getMillseconds();
                 reply.result = startTime;
             } else if (request.subrequest == TimerSubrequest::STOP) {
-                stopTime = getMillseconds();
-                currentTime = stopTime - startTime;
+                if (!isTimerStarted) {
+                    reply.error = ErrorTypes::STOP_BEFORE_START;
+                } else {
+                    isTimerStarted = false;
+                    stopTime = getMillseconds();
+                    currentTime = stopTime - startTime;
+                }
                 reply.result = stopTime;
             } else if (request.subrequest == TimerSubrequest::TIME) {
-                std::cout << "HERE time1 = " << currentTime << std::endl;
                 reply.result = currentTime;
             }
 
