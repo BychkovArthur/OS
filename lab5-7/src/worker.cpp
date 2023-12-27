@@ -5,6 +5,7 @@
 #include <chrono>
 #include <sys/time.h>
 #include <semaphore>
+#include <mutex>
 
 #include "definitions.hpp"
 #include "functions.hpp"
@@ -22,6 +23,14 @@ zmq::socket_t pushReplySocket(context4, zmq::socket_type::push);
 bool processWorking = true;
 
 std::binary_semaphore killSemaphore(0);
+std::vector<Request> tasks;
+std::mutex taskMutex;
+
+ssize_t startTime;
+ssize_t stopTime;
+ssize_t currentTime = 0;
+bool isTimerStarted = false;
+
 
 void signal_handler(int signal) {
     if (signal == SIGTERM) {
@@ -67,12 +76,44 @@ ssize_t getMillseconds() {
 	return ((size_t)currentTime.tv_sec * (size_t)1e6 + (size_t)currentTime.tv_usec) / 1000;
 }
 
-int main(int argc, char* argv[]) {
+void taskComplete() {
+    while (true) {
+        taskMutex.lock();
+        if (tasks.empty()) {
+            taskMutex.unlock();
+            continue;
+        }
+        Request request = tasks.back();
+        tasks.pop_back();
+        Reply reply;
+        reply.operationType = request.operationType;
+        reply.error = ErrorTypes::NO_ERRORS;
+        reply.subrequest = request.subrequest;
+        reply.id = request.id;
 
-    ssize_t startTime;
-    ssize_t stopTime;
-    ssize_t currentTime = 0;
-    bool isTimerStarted = false;
+        if (request.subrequest == TimerSubrequest::START) {
+            isTimerStarted = true;
+            startTime = getMillseconds();
+            reply.result = startTime;
+        } else if (request.subrequest == TimerSubrequest::STOP) {
+            if (!isTimerStarted) {
+                reply.error = ErrorTypes::STOP_BEFORE_START;
+            } else {
+                isTimerStarted = false;
+                stopTime = getMillseconds();
+                currentTime = stopTime - startTime;
+            }
+            reply.result = stopTime;
+        } else if (request.subrequest == TimerSubrequest::TIME) {
+            reply.result = currentTime;
+            std::this_thread::sleep_for(std::chrono::seconds(15));
+        }
+        pushReply(pushReplySocket, reply);
+        taskMutex.unlock();
+    }
+}
+
+int main(int argc, char* argv[]) {
 
     if (argc != 3) {
         std::cerr << "Invalid worker exec (worker)" << std::endl;
@@ -94,37 +135,14 @@ int main(int argc, char* argv[]) {
     pullReplySocket.bind(getAddres(currentPort + 0));
 
     std::thread replyThread(getReply);
+    std::thread taskCompleteThread(taskComplete);
 
     while (true) {
         Request request = pullRequest(pullRequestSocket);
-
         if (request.id == nodeId) { // Ответ 
-
-            Reply reply;
-            reply.operationType = request.operationType;
-            reply.error = ErrorTypes::NO_ERRORS;
-            reply.subrequest = request.subrequest;
-            reply.id = request.id;
-
-            if (request.subrequest == TimerSubrequest::START) {
-                isTimerStarted = true;
-                startTime = getMillseconds();
-                reply.result = startTime;
-            } else if (request.subrequest == TimerSubrequest::STOP) {
-                if (!isTimerStarted) {
-                    reply.error = ErrorTypes::STOP_BEFORE_START;
-                } else {
-                    isTimerStarted = false;
-                    stopTime = getMillseconds();
-                    currentTime = stopTime - startTime;
-                }
-                reply.result = stopTime;
-            } else if (request.subrequest == TimerSubrequest::TIME) {
-                reply.result = currentTime;
-                std::this_thread::sleep_for(std::chrono::seconds(15));
-            }
-            pushReply(pushReplySocket, reply);
-
+            taskMutex.lock();
+            tasks.push_back(request);
+            taskMutex.unlock();
         } else {
             pushRequest(pushRequestSocket, request);
         }
