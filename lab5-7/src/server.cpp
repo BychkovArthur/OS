@@ -7,17 +7,6 @@
 #include "definitions.hpp"
 #include "functions.hpp"
 
-/*
-    TODO
-    - Сейчас у меня при выходе не дожидается ответа
-    - Добавить отчистку ресурсов после ошибки
-    - Валидация порта и nodeId (createNewNode)
-    - Нормальный путь сделать (createNewNode)
-    - У меня никак не соединяется поток в воркере.
-    - При ошибке все по пизде
-    - Возможно, вычисления делать тоже в дргом потоке
-*/
-
 zmq::context_t context1;
 zmq::context_t context2;
 
@@ -62,6 +51,7 @@ int main() {
         Value: <ProcessId, currentPort>
     */ 
     std::unordered_map<ssize_t, std::pair<pid_t, size_t>> nodes;
+    std::map<size_t, std::vector<pid_t>> nodesByPort;
 
     size_t currentPort = MIN_DYNAMIC_PORT;
     Request request;
@@ -89,22 +79,21 @@ int main() {
         case OperationType::EXEC:
             if (nodes.count(request.id) == 0) {
                 std::cout << "Error: " << request.id << ": Not found" << std::endl;
-            } else if (!isProcessExists(nodes[request.id].first)){
+            } else if (!isNodeAvaliable(nodesByPort, nodes[request.id].first)){
                 std::cout << "Error: " << request.id << ": Node is unvaliable" << std::endl;
             } else {
                 pushRequest(pushRequestSocket, request);
             }
             break;
         case OperationType::CREATE:
-            // мьютекс навесить
-            ++workerksCount;
-            updateNodeMap(nodes, currentPort, request);
+           ++workerksCount;
+            updateNodeMap(nodes, nodesByPort, currentPort, request);
             break;
         case OperationType::PING:
             if (nodes.count(request.id) == 0) {
                 std::cout << "Error: " << request.id << ": Not found" << std::endl;
             } else {
-                if (isProcessExists(nodes[request.id].first)) {
+                if (isNodeAvaliable(nodesByPort, nodes[request.id].first)) {
                     std::cout << "Ok: 1" << std::endl;
                 } else {
                     std::cout << "Ok: 0" << std::endl;

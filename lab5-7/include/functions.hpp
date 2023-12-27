@@ -20,9 +20,10 @@ void pushReply(zmq::socket_t& socket, Reply& request);
 Reply pullReply(zmq::socket_t& socket);
 Request pullRequest(zmq::socket_t& socket);
 
-std::pair<pid_t, bool> createNewNode(std::unordered_map<ssize_t, std::pair<pid_t, size_t>>&, ssize_t, size_t&);
-void updateNodeMap(std::unordered_map<ssize_t, std::pair<pid_t, size_t>>&, size_t&, Request&);
+std::pair<pid_t, std::pair<bool, size_t>> createNewNode(std::unordered_map<ssize_t, std::pair<pid_t, size_t>>&, ssize_t, size_t&);
+void updateNodeMap(std::unordered_map<ssize_t, std::pair<pid_t, size_t>>&, std::map<size_t, std::vector<pid_t>>&, size_t&, Request&);
 
 void killWorkers(std::unordered_map<ssize_t, std::pair<pid_t, size_t>>&);
 
 bool isProcessExists(pid_t);
+bool isNodeAvaliable(std::map<size_t, std::vector<pid_t>>&, pid_t);

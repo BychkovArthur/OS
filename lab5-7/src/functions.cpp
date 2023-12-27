@@ -7,7 +7,6 @@ std::string getAddres(size_t port) {
     return std::string("tcp://127.0.0.1:") + std::to_string(port);
 }
 
-
 // MESSAGE VALIDATOR --------------------------------------------------------------
 void validateOperationType(Request& request, std::string& operationType) {
     if (operationType == "quit") {
@@ -97,17 +96,6 @@ Request readRequest() {
 
 // MESSAGE VALIDATOR --------------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
-
 // MESSAGE SENDER/PULLER --------------------------------------------------------------
 
 void pushRequest(zmq::socket_t& socket, Request& request) {
@@ -150,21 +138,14 @@ Request pullRequest(zmq::socket_t& socket) {
 }
 // MESSAGE SENDER/PULLER --------------------------------------------------------------
 
-
-
-
-
-
-
-
 // Валидация порта и nodeId
-std::pair<pid_t, bool> createNewNode(std::unordered_map<ssize_t, std::pair<pid_t, size_t>>& nodes, ssize_t nodeId, size_t& currentPort) {
+std::pair<pid_t, std::pair<bool, size_t>> createNewNode(std::unordered_map<ssize_t, std::pair<pid_t, size_t>>& nodes, ssize_t nodeId, size_t& currentPort) {
     
     bool replace = false;
 
     if (nodes.count(nodeId) > 0) {
         std::cout << "Error: Already exists" << std::endl;
-        return std::pair<pid_t, bool> {PID_FOR_ALREADY_EXIST_NODE, replace};
+        return std::pair<pid_t, std::pair<bool, size_t>> {PID_FOR_ALREADY_EXIST_NODE, {replace, 0}};
     }
     
 
@@ -197,15 +178,39 @@ std::pair<pid_t, bool> createNewNode(std::unordered_map<ssize_t, std::pair<pid_t
     }
 
     std::cout << "Ok: " << processId << std::endl;
-    return std::pair<pid_t, bool> {processId, replace};
+    return std::pair<pid_t, std::pair<bool, size_t>> {processId, std::pair<bool, size_t>{replace, currentPortCopy}};
 }
 
-void updateNodeMap(std::unordered_map<ssize_t, std::pair<pid_t, size_t>>& nodes, size_t& currentPort, Request& request) {
-    std::pair<pid_t, bool> newWorkerInfo = createNewNode(nodes, request.id, currentPort);
+bool isNodeAvaliable(std::map<size_t, std::vector<pid_t>>& nodeByPort, pid_t processId) {
+    for (auto& portInfo : nodeByPort) {
+        bool wasGoodWorker = false;
+        for (pid_t id : nodeByPort[portInfo.first]) {
+            if (id == processId) {
+                return isProcessExists(processId);
+            } else if (!wasGoodWorker) {
+                wasGoodWorker = isProcessExists(id);
+            }
+        }
+        if (!wasGoodWorker) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void updateNodeMap(std::unordered_map<ssize_t, std::pair<pid_t, size_t>>& nodes, std::map<size_t, std::vector<pid_t>>& nodeByPort, size_t& currentPort, Request& request) {
+    std::pair<pid_t, std::pair<bool, size_t>> newWorkerInfo = createNewNode(nodes, request.id, currentPort);
     if (newWorkerInfo.first != PID_FOR_ALREADY_EXIST_NODE) {
         nodes[request.id] = std::pair<pid_t, size_t>{newWorkerInfo.first, currentPort};
 
-        if (!newWorkerInfo.second) {
+        if (nodeByPort.count(newWorkerInfo.second.second) == 0) {
+            std::vector<pid_t> vct;
+            vct.push_back(newWorkerInfo.first);
+            nodeByPort[newWorkerInfo.second.second] = vct;
+        } else {
+            nodeByPort[newWorkerInfo.second.second].push_back(newWorkerInfo.first);
+        }
+        if (!newWorkerInfo.second.first) {
             currentPort += 2;
         }
     }
